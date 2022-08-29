@@ -1,0 +1,28 @@
+version: '3.7'
+services:
+  finance:
+    image: gitlab.helvetandethics.com:5050/cointrade/finance:${CI_COMMIT_SHORT_SHA}
+    container_name: finance
+    command: yarn start:prod
+    restart: unless-stopped
+    ports:
+      - 3013:3013
+    networks:
+      - reverse-proxy-network
+networks:
+  reverse-proxy-network:
+    external: true
+   
+    # networks:
+    #     reverse-proxy-network:
+    #       ipv4_address: 172.28.3.0
+        # dbs-network:
+        #   ipv4_address: 172.27.3.0
+
+
+# networks:
+#   reverse-proxy-network:
+#     external: true
+  # dbs-network:
+  #   name: dbs-network
+  #   external: true

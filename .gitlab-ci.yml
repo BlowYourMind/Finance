@@ -1,0 +1,71 @@
+stages:
+  - build
+  - deploy
+
+variables:
+  IMAGE_BUILDER: $CI_REGISTRY_IMAGE:builder
+  IMAGE_COMMIT: $CI_REGISTRY_IMAGE:$CI_COMMIT_SHORT_SHA
+  IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
+
+.prepare: &prepare
+  before_script:
+    - echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER $CI_REGISTRY --password-stdin
+
+.cleanup: &cleanup
+  after_script:
+    - docker image prune -a -f
+    - echo 'AFTER SCRIPT FINISHED'
+
+.retry: &retry
+  interruptible: true
+  script: 
+    - echo 'Retry SCRIPT FINISHED'
+  retry:
+    max: 2
+    when:
+      - runner_system_failure
+      - stuck_or_timeout_failure
+
+docker-build:
+  stage: build
+  <<: *prepare
+  <<: *cleanup
+  <<: *retry
+  script:
+    - docker pull $IMAGE_BUILDER || true
+    - docker pull $IMAGE_COMMIT || true
+    - docker pull $IMAGE_LATEST || true
+    - docker build --cache-from $IMAGE_BUILDER --target builder --tag $IMAGE_BUILDER .
+    - docker build --cache-from $IMAGE_LATEST --cache-from $IMAGE_BUILDER --tag $IMAGE_COMMIT --tag $IMAGE_LATEST .
+    - docker push $IMAGE_BUILDER
+    - docker push $IMAGE_COMMIT
+    - docker push $IMAGE_LATEST
+  tags:
+    - docker-build
+  only:
+    - main
+
+.deploy: &deploy
+    stage: deploy
+    <<: *prepare
+    <<: *cleanup
+    <<: *retry
+    script:
+        - docker-compose pull
+        - docker-compose down --remove-orphans
+        - docker-compose up -d
+    only: 
+      - main
+
+deploy-ci:
+    <<: *deploy
+    environment:
+        name: ci
+        url: https://сointrade.com
+    tags:
+      - deploy-main
+
+
+
+
+

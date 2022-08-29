@@ -8,21 +8,22 @@ import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 export class AppController {
   constructor(private readonly appService: AppService) {
     this.makeAction({
-      marketHigh: MarketType.BINANCE,
-      marketLow: MarketType.KRAKEN,
-      tradePercentage: '10',
+      marketHigh: MarketType.KRAKEN,
+      marketLow: MarketType.BINANCE,
+      tradePercentage: '0.05',
     });
-    this.getBalance('kraken');
-    this.getBalance('binance');
+    // this.getBalance('kraken');
+    // this.getBalance('binance');
   }
 
-  @MessagePattern('get-balance')
+  @MessagePattern({ cmd: 'get-balance' })
   async getBalance(@Payload() market: string) {
     return await this.appService.checkBalance(market);
   }
 
   @EventPattern('make-trade')
-  async makeAction(actionInfo: ActionInfo) {
-    await this.appService.makeAction(actionInfo);
+  makeAction(actionInfo: ActionInfo) {
+    this.appService.makeAction(actionInfo);
+    return 'info getted';
   }
 }

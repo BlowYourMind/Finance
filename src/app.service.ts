@@ -19,8 +19,6 @@ export class AppService {
     ): Promise<any | void> => {
       const response = await this.binanceService[actionType](amount);
       if (response) {
-        console.log(response);
-
         return response;
       }
       return;
@@ -31,8 +29,6 @@ export class AppService {
     ): Promise<any | void> => {
       const response = await this.krakenService[actionType](amount);
       if (response) {
-        console.log(response);
-
         return response;
       }
       return;

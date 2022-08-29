@@ -12,20 +12,15 @@ export class SignatureService {
 
   public encryptKrakenData(
     path: string,
-    request: any = {},
+    request: any,
     secret: string,
     nonce: number,
   ) {
-    const postData = new URLSearchParams({
-      ...request,
-      nonce: nonce.toString(),
-    }).toString();
-
     return createHmac('sha512', Buffer.from(secret, 'base64'))
       .update(path)
       .update(
         createHash('sha256')
-          .update(nonce + postData)
+          .update(nonce + request)
           .digest(),
       )
       .digest('base64');

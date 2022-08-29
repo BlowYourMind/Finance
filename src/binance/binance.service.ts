@@ -11,29 +11,71 @@ export class BinanceService {
     private readonly signatureService: SignatureService,
   ) {}
   async buy(amount: string) {
-    console.log('bought');
-    return;
-    return firstValueFrom(
-      this.httpService.post('https://api1.binance.com/api/v3/order', {
-        symbol: 'BTCUSDT',
-        side: 'BUY',
-        type: 'MARKET',
-        quantity: amount,
-      }),
-    );
+    const params = {
+      symbol: 'SOLUSDT',
+      side: 'BUY',
+      type: 'MARKET',
+      quantity: amount,
+      timestamp: Date.now().toString(),
+    };
+    const query = new URLSearchParams({
+      ...params,
+      signature: this.signatureService.encryptBinanceData(
+        new URLSearchParams(params).toString(),
+        '2YG7NqWK1WSzcEsPcQFeUNQWOK7AQ77EIzCBqG0euQWUASXd45bqhf3kFKtGuUi2',
+      ),
+    });
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.post(
+          'https://api1.binance.com/api/v3/order?' +
+            new URLSearchParams(query).toString(),
+          '',
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                '3R0WLL5rpdZmcHhm93wXsrVQ869s6dRltxW4S6DOkDxhcrJhm2sDCrKmdnO6JQBn',
+            },
+          },
+        ),
+      );
+    } catch (e) {
+      throw e;
+    }
   }
 
   async sell(amount: string) {
-    console.log('sold');
-    return;
-    return firstValueFrom(
-      this.httpService.post('https://api1.binance.com/api/v3/order', {
-        symbol: 'BTCUSDT',
-        side: 'SELL',
-        type: 'MARKET',
-        quantity: amount,
-      }),
-    );
+    const params = {
+      symbol: 'SOLUSDT',
+      side: 'SELL',
+      type: 'MARKET',
+      quantity: amount,
+      timestamp: Date.now().toString(),
+    };
+    const query = new URLSearchParams({
+      ...params,
+      signature: this.signatureService.encryptBinanceData(
+        new URLSearchParams(params).toString(),
+        '2YG7NqWK1WSzcEsPcQFeUNQWOK7AQ77EIzCBqG0euQWUASXd45bqhf3kFKtGuUi2',
+      ),
+    });
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.post(
+          'https://api1.binance.com/api/v3/order?' +
+            new URLSearchParams(query).toString(),
+          '',
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                '3R0WLL5rpdZmcHhm93wXsrVQ869s6dRltxW4S6DOkDxhcrJhm2sDCrKmdnO6JQBn',
+            },
+          },
+        ),
+      );
+    } catch (e) {
+      throw e;
+    }
   }
 
   async check(): Promise<balanceInfo> {

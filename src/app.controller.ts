@@ -7,13 +7,7 @@ import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {
-    this.makeAction({
-      marketHigh: MarketType.KRAKEN,
-      marketLow: MarketType.BINANCE,
-      tradePercentage: '0.05',
-    });
-    // this.getBalance('kraken');
-    // this.getBalance('binance');
+    console.log(Date.now);
   }
 
   @MessagePattern({ cmd: 'get-balance' })

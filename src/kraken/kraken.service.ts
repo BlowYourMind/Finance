@@ -41,7 +41,10 @@ export class KrakenService {
           },
         ),
       );
+      console.log(balance.data);
     } catch (e) {
+      console.log(e);
+
       return e;
     }
   }
@@ -76,7 +79,10 @@ export class KrakenService {
           },
         ),
       );
+      console.log(balance.data);
     } catch (e) {
+      console.log(e);
+
       return e;
     }
   }

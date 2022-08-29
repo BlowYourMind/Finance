@@ -50,10 +50,15 @@ export class AppService {
   }
 
   async makeAction(actionInfo: ActionInfo) {
+    console.log(actionInfo);
+    console.log('buying');
+
     await this.buySellCheckIn[actionInfo.marketLow](
       actionInfo.amountToBuy,
       'buy',
     );
+    console.log('buying');
+
     await this.buySellCheckIn[actionInfo.marketHigh](
       actionInfo.amountToSell,
       'sell',

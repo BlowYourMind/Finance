@@ -51,11 +51,11 @@ export class AppService {
 
   async makeAction(actionInfo: ActionInfo) {
     await this.buySellCheckIn[actionInfo.marketLow](
-      actionInfo.tradePercentage,
+      actionInfo.amountToBuy,
       'buy',
     );
     await this.buySellCheckIn[actionInfo.marketHigh](
-      actionInfo.tradePercentage,
+      actionInfo.amountToSell,
       'sell',
     );
   }

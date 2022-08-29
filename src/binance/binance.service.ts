@@ -40,7 +40,7 @@ export class BinanceService {
         ),
       );
     } catch (e) {
-      throw e;
+      return e;
     }
   }
 
@@ -74,7 +74,7 @@ export class BinanceService {
         ),
       );
     } catch (e) {
-      throw e;
+      return e;
     }
   }
 
@@ -128,7 +128,7 @@ export class BinanceService {
       );
       return { sol: solBalance.data[0].free, usdt: usdtBalance.data[0].free };
     } catch (e) {
-      throw e;
+      return e;
     }
   }
 }

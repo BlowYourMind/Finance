@@ -42,7 +42,7 @@ export class KrakenService {
         ),
       );
     } catch (e) {
-      throw e;
+      return e;
     }
   }
 
@@ -77,7 +77,7 @@ export class KrakenService {
         ),
       );
     } catch (e) {
-      throw e;
+      return e;
     }
   }
 
@@ -90,21 +90,24 @@ export class KrakenService {
       'xdcpQzN/0uG0qLl/FQ+slDgLsklUjdqSHLbNRQP5bTzSmj3fyi8VX2WzTmiQqJxBuwnXq/bkqwASfORlI+KVZg==',
       nonce,
     );
-
-    const balance = await firstValueFrom(
-      this.httpService.post(
-        'https://api.kraken.com/0/private/Balance',
-        postData,
-        {
-          headers: {
-            'API-Key':
-              'JF/qGM+u1xU5gulW7ks3JrnQpiRfZ6TlW03I9ELY3v4P0sDbEqmcM0K2',
-            'API-Sign': signature,
-            'Content-Type': 'application/x-www-form-urlencoded',
+    try {
+      const balance = await firstValueFrom(
+        this.httpService.post(
+          'https://api.kraken.com/0/private/Balance',
+          postData,
+          {
+            headers: {
+              'API-Key':
+                'JF/qGM+u1xU5gulW7ks3JrnQpiRfZ6TlW03I9ELY3v4P0sDbEqmcM0K2',
+              'API-Sign': signature,
+              'Content-Type': 'application/x-www-form-urlencoded',
+            },
           },
-        },
-      ),
-    );
-    return { sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD };
+        ),
+      );
+      return { sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD };
+    } catch (e) {
+      return e;
+    }
   }
 }

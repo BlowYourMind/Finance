@@ -1,7 +1,6 @@
 import { Controller } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ActionInfo } from './dto/makeTrade.dto';
-import { MarketType } from './dto/marketType.dto';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller()

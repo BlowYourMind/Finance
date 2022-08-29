@@ -7,7 +7,7 @@ import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {
-    console.log(Date.now);
+    console.log(Date.now().toString());
   }
 
   @MessagePattern({ cmd: 'get-balance' })

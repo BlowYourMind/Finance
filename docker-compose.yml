@@ -1,7 +1,7 @@
 version: '3.7'
 services:
   main:
-    image: gitlab.helvetandethics.com:5050/cointrade/poc:${CI_COMMIT_SHORT_SHA}
+    image: gitlab.helvetandethics.com:5050/cointrade/finance:${CI_COMMIT_SHORT_SHA}
     container_name: main
     command: yarn start:prod
     restart: unless-stopped

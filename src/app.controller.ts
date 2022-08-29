@@ -2,20 +2,15 @@ import { Controller } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ActionInfo } from './dto/makeTrade.dto';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
-import { MarketType } from './dto/marketType.dto';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {
-    this.getBalance('binance');
-    console.log(Date.now().toString());
-  }
+  constructor(private readonly appService: AppService) {}
 
   @MessagePattern({ cmd: 'get-balance' })
   async getBalance(@Payload() market: string) {
     const res = await this.appService.checkBalance(market);
     console.log(res);
-
     return res;
   }
 

@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import { balanceInfo } from 'src/dto/balance.dto';
 import { SignatureService } from 'src/signature/signature.service';
@@ -7,6 +8,7 @@ import { SignatureService } from 'src/signature/signature.service';
 @Injectable()
 export class KrakenService {
   constructor(
+    @Inject('DATA-POOL') private client: ClientProxy,
     private readonly httpService: HttpService,
     private readonly signatureService: SignatureService,
   ) {}
@@ -43,8 +45,11 @@ export class KrakenService {
       );
       console.log(balance.data);
     } catch (e) {
-      console.log(e);
-
+      if (e.data) {
+        console.log(e.data);
+      } else {
+        console.log(e);
+      }
       return e;
     }
   }
@@ -81,7 +86,11 @@ export class KrakenService {
       );
       console.log(balance.data);
     } catch (e) {
-      console.log(e);
+      if (e.data) {
+        console.log(e.data);
+      } else {
+        console.log(e);
+      }
 
       return e;
     }

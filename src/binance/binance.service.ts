@@ -41,7 +41,11 @@ export class BinanceService {
       );
       console.log(res.data);
     } catch (e) {
-      console.log(e);
+      if (e.data) {
+        console.log(e.data);
+      } else {
+        console.log(e);
+      }
 
       return e;
     }
@@ -78,7 +82,11 @@ export class BinanceService {
       );
       console.log(res.data);
     } catch (e) {
-      console.log(e);
+      if (e.data) {
+        console.log(e.data);
+      } else {
+        console.log(e);
+      }
 
       return e;
     }

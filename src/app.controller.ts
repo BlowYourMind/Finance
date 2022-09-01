@@ -5,7 +5,9 @@ import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
+  constructor(private readonly appService: AppService) {
+    this.appService.checkBalance('okex');
+  }
 
   @MessagePattern({ cmd: 'get-balance' })
   async getBalance(@Payload() market: string) {

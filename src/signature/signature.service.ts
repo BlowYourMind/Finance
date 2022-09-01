@@ -9,7 +9,25 @@ export class SignatureService {
 
     return createHmac('sha256', key).update(a.toString()).digest('hex');
   }
+  public encryptOkexData(
+    timeStamp: string,
+    method: string,
+    reqPath: string,
+    body?,
+  ): string {
+    const hash = createHmac('sha256', '6331C05F1403FEE0799044A33AE4C4AE')
+      .update(timeStamp + method + reqPath + (body ? JSON.stringify(body) : ''))
+      .digest('base64');
+    console.log(hash);
 
+    return hash;
+    //  Base64.stringify(
+    //   hmacSHA256(
+    //     timeStamp + method + reqPath + (body ? JSON.stringify(body) : ''),
+    //     '6331C05F1403FEE0799044A33AE4C4AE',
+    //   ),
+    // );
+  }
   public encryptKrakenData(
     path: string,
     request: any,

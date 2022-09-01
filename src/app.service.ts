@@ -3,6 +3,7 @@ import { BinanceService } from './binance/binance.service';
 import { CryptoService } from './crypto/crypto.service';
 import { ActionInfo } from './dto/makeTrade.dto';
 import { KrakenService } from './kraken/kraken.service';
+import { OkexService } from './okex/okex.service';
 
 @Injectable()
 export class AppService {
@@ -10,6 +11,7 @@ export class AppService {
     private readonly binanceService: BinanceService,
     private readonly krakenService: KrakenService,
     private readonly cryptoService: CryptoService,
+    private readonly okexService: OkexService,
   ) {}
   buySellCheckIn = {
     // *******************************
@@ -38,6 +40,16 @@ export class AppService {
       actionType: 'sell' | 'buy' | 'check',
     ): Promise<any | void> => {
       const response = await this.cryptoService[actionType](amount);
+      if (response) {
+        return response;
+      }
+      return;
+    },
+    okex: async (
+      amount: string,
+      actionType: 'sell' | 'buy' | 'check',
+    ): Promise<any | void> => {
+      const response = await this.okexService[actionType](amount);
       if (response) {
         return response;
       }

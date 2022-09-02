@@ -12,33 +12,33 @@ export class OkexService {
   ) {}
 
   async buy(amount: string) {
-    const nonce = Date.now();
-    const postData = new URLSearchParams({
-      nonce: nonce.toString(),
-      ordertype: 'market',
-      type: 'buy',
-      volume: amount,
-      pair: 'SOLUSD',
-    });
-    const signature = this.signatureService.encryptKrakenData(
-      '/0/private/AddOrder',
-      postData,
-      'xdcpQzN/0uG0qLl/FQ+slDgLsklUjdqSHLbNRQP5bTzSmj3fyi8VX2WzTmiQqJxBuwnXq/bkqwASfORlI+KVZg==',
+    const nonce = new Date().toISOString();
+    const postData = {
+      instId: 'SOL-USDT',
+      tdMode: 'cash',
+      side: 'buy',
+      ordType: 'market',
+      sz: amount,
+      tgtCcy: 'base_ccy',
+    };
+    const signature = this.signatureService.encryptOkexData(
       nonce,
+      'POST',
+      '/api/v5/trade/order',
+      postData,
     );
     try {
       const balance = await firstValueFrom(
         this.httpService.post(
-          'https://api.kraken.com/0/private/AddOrder',
+          'https://www.okex.com/api/v5/trade/order',
           postData,
           {
             headers: {
-              'Content-Type': 'application/json',
+              Content_Type: 'application/json',
               'OK-ACCESS-KEY': '988d9636-b941-4c1d-a3f1-81ff01140a33',
               'OK-ACCESS-SIGN': signature,
               'OK-ACCESS-PASSPHRASE': '!W#Q@E4t6r5y',
               'OK-ACCESS-TIMESTAMP': nonce,
-              'x-simulated-trading': '0',
             },
           },
         ),
@@ -50,36 +50,38 @@ export class OkexService {
       } else {
         console.log(e);
       }
+
       return e;
     }
   }
 
   async sell(amount: string) {
-    const nonce = Date.now();
-    const postData = new URLSearchParams({
-      nonce: nonce.toString(),
-      ordertype: 'market',
-      type: 'sell',
-      volume: amount,
-      pair: 'SOLUSD',
-    });
-    const signature = this.signatureService.encryptKrakenData(
-      '/0/private/AddOrder',
-      postData,
-      'xdcpQzN/0uG0qLl/FQ+slDgLsklUjdqSHLbNRQP5bTzSmj3fyi8VX2WzTmiQqJxBuwnXq/bkqwASfORlI+KVZg==',
+    const nonce = new Date().toISOString();
+    const postData = {
+      instId: 'SOL-USDT',
+      tdMode: 'cash',
+      side: 'sell',
+      ordType: 'market',
+      sz: amount,
+    };
+    const signature = this.signatureService.encryptOkexData(
       nonce,
+      'POST',
+      '/api/v5/trade/order',
+      postData,
     );
     try {
       const balance = await firstValueFrom(
         this.httpService.post(
-          'https://api.kraken.com/0/private/AddOrder',
+          'https://www.okex.com/api/v5/trade/order',
           postData,
           {
             headers: {
-              'API-Key':
-                'JF/qGM+u1xU5gulW7ks3JrnQpiRfZ6TlW03I9ELY3v4P0sDbEqmcM0K2',
-              'API-Sign': signature,
-              'Content-Type': 'application/x-www-form-urlencoded',
+              Content_Type: 'application/json',
+              'OK-ACCESS-KEY': '988d9636-b941-4c1d-a3f1-81ff01140a33',
+              'OK-ACCESS-SIGN': signature,
+              'OK-ACCESS-PASSPHRASE': '!W#Q@E4t6r5y',
+              'OK-ACCESS-TIMESTAMP': nonce,
             },
           },
         ),
@@ -97,29 +99,32 @@ export class OkexService {
   }
 
   async check(): Promise<balanceInfo> {
-    const nonce = Date.now().toString();
-    console.log();
-
+    const nonce = new Date().toISOString();
     const signature = this.signatureService.encryptOkexData(
       nonce,
       'GET',
-      '/api/v5/account/balance',
-      undefined,
+      '/api/v5/account/balance?ccy=USDT,SOL',
     );
     try {
       const balance = await firstValueFrom(
-        this.httpService.get('https://www.okex.com/api/v5/account/balance', {
-          headers: {
-            'OK-ACCESS-KEY': '988d9636-b941-4c1d-a3f1-81ff01140a33',
-            'OK-ACCESS-SIGN': signature,
-            'OK-ACCESS-PASSPHRASE': '!W#Q@E4t6r5y',
-            'OK-ACCESS-TIMESTAMP': nonce,
+        this.httpService.get(
+          'https://www.okex.com/api/v5/account/balance?ccy=USDT,SOL',
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'OK-ACCESS-KEY': '988d9636-b941-4c1d-a3f1-81ff01140a33',
+              'OK-ACCESS-SIGN': signature,
+              'OK-ACCESS-PASSPHRASE': '!W#Q@E4t6r5y',
+              'OK-ACCESS-TIMESTAMP': nonce,
+            },
           },
-        }),
+        ),
       );
-      console.log(balance);
 
-      return { sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD };
+      return {
+        sol: balance.data.data[0].details[1].availBal,
+        usdt: balance.data.data[0].details[0].availBal,
+      };
     } catch (e) {
       console.log(e);
 

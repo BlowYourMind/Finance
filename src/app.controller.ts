@@ -2,12 +2,11 @@ import { Controller } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ActionInfo } from './dto/makeTrade.dto';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
+import { MarketType } from './dto/marketType.dto';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {
-    this.appService.checkBalance('okex');
-  }
+  constructor(private readonly appService: AppService) {}
 
   @MessagePattern({ cmd: 'get-balance' })
   async getBalance(@Payload() market: string) {

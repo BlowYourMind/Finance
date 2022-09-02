@@ -3,6 +3,9 @@ import { createHmac, createHash } from 'crypto';
 
 @Injectable()
 export class SignatureService {
+  Base64 = require('crypto-js/enc-base64');
+  HmacSHA256 = require('crypto-js/hmac-sha256');
+
   public ecnryptPayload(payload, key) {
     const a = new URLSearchParams({ ...payload, timestamp: Date.now() });
     console.log(a.toString());
@@ -18,15 +21,8 @@ export class SignatureService {
     const hash = createHmac('sha256', '6331C05F1403FEE0799044A33AE4C4AE')
       .update(timeStamp + method + reqPath + (body ? JSON.stringify(body) : ''))
       .digest('base64');
-    console.log(hash);
 
     return hash;
-    //  Base64.stringify(
-    //   hmacSHA256(
-    //     timeStamp + method + reqPath + (body ? JSON.stringify(body) : ''),
-    //     '6331C05F1403FEE0799044A33AE4C4AE',
-    //   ),
-    // );
   }
   public encryptKrakenData(
     path: string,

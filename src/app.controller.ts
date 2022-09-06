@@ -7,6 +7,12 @@ import { MarketType } from './dto/marketType.dto';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
+ 
+  @MessagePattern({ cmd: 'ping'})
+  async ping(@Payload() test:string ){
+    console.log('ping');
+    return test;
+  } 
 
   @MessagePattern({ cmd: 'get-balance' })
   async getBalance(@Payload() market: string) {

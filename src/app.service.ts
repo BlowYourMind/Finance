@@ -1,4 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';
 import { BinanceService } from './binance/binance.service';
 import { CryptoService } from './crypto/crypto.service';
 import { ActionInfo } from './dto/makeTrade.dto';
@@ -12,7 +13,8 @@ export class AppService {
     private readonly krakenService: KrakenService,
     private readonly cryptoService: CryptoService,
     private readonly okexService: OkexService,
-  ) {}
+    @Inject('SCOUT-LEADER') private client: ClientProxy,
+  ) { }
   buySellCheckIn = {
     // *******************************
     binance: async (
@@ -69,11 +71,15 @@ export class AppService {
       actionInfo.amountToBuy,
       'buy',
     );
+    this.client.send({ cmd: 'market-price' }, { marketName: actionInfo.marketLow, action: "buy", asset: "SOL", currency: "USDT" });
+
+
     console.log('buying');
 
     await this.buySellCheckIn[actionInfo.marketHigh](
       actionInfo.amountToSell,
       'sell',
     );
+    this.client.send({ cmd: 'market-price' }, { marketName: actionInfo.marketHigh, action: "buy", asset: "SOL", currency: "USDT" });
   }
 }

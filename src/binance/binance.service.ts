@@ -9,7 +9,7 @@ export class BinanceService {
   constructor(
     private readonly httpService: HttpService,
     private readonly signatureService: SignatureService,
-  ) {}
+  ) { }
   async buy(amount: string) {
     const params = {
       symbol: 'SOLUSDT',
@@ -29,7 +29,7 @@ export class BinanceService {
       const res = await firstValueFrom(
         await this.httpService.post(
           'https://api1.binance.com/api/v3/order?' +
-            new URLSearchParams(query).toString(),
+          new URLSearchParams(query).toString(),
           '',
           {
             headers: {
@@ -70,7 +70,7 @@ export class BinanceService {
       const res = await firstValueFrom(
         await this.httpService.post(
           'https://api1.binance.com/api/v3/order?' +
-            new URLSearchParams(query).toString(),
+          new URLSearchParams(query).toString(),
           '',
           {
             headers: {
@@ -140,6 +140,10 @@ export class BinanceService {
           },
         ),
       );
+      console.log('bin');
+
+      console.log({ sol: solBalance.data[0].free, usdt: usdtBalance.data[0].free });
+
       return { sol: solBalance.data[0].free, usdt: usdtBalance.data[0].free };
     } catch (e) {
       return e;

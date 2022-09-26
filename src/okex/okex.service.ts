@@ -9,7 +9,7 @@ export class OkexService {
   constructor(
     private readonly httpService: HttpService,
     private readonly signatureService: SignatureService,
-  ) {}
+  ) { }
 
   async buy(amount: string) {
     const nonce = new Date().toISOString();
@@ -120,6 +120,10 @@ export class OkexService {
           },
         ),
       );
+      console.log('okx');
+
+      console.log(balance.data.data[0].details);
+
 
       return {
         sol: balance.data.data[0].details[1].availBal,

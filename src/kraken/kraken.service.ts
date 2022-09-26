@@ -10,7 +10,7 @@ export class KrakenService {
   constructor(
     private readonly httpService: HttpService,
     private readonly signatureService: SignatureService,
-  ) {}
+  ) { }
 
   async buy(amount: string) {
     const nonce = Date.now();
@@ -119,6 +119,10 @@ export class KrakenService {
           },
         ),
       );
+      console.log('kraken');
+
+      console.log({ sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD });
+
       return { sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD };
     } catch (e) {
       return e;

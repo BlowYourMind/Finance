@@ -120,14 +120,11 @@ export class OkexService {
           },
         ),
       );
-      console.log('okx');
-
-      console.log(balance.data.data[0].details);
 
 
       return {
-        sol: balance.data.data[0].details[1].availBal,
-        usdt: balance.data.data[0].details[0].availBal,
+        sol: balance.data.data[0].details[0].availBal,
+        usdt: balance.data.data[0].details[1].availBal,
       };
     } catch (e) {
       console.log(e);

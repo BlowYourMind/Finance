@@ -119,9 +119,6 @@ export class KrakenService {
           },
         ),
       );
-      console.log('kraken');
-
-      console.log({ sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD });
 
       return { sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD };
     } catch (e) {

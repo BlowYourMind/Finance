@@ -140,9 +140,6 @@ export class BinanceService {
           },
         ),
       );
-      console.log('bin');
-
-      console.log({ sol: solBalance.data[0].free, usdt: usdtBalance.data[0].free });
 
       return { sol: solBalance.data[0].free, usdt: usdtBalance.data[0].free };
     } catch (e) {

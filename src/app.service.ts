@@ -13,7 +13,7 @@ export class AppService {
     private readonly krakenService: KrakenService,
     private readonly cryptoService: CryptoService,
     private readonly okexService: OkexService,
-    @Inject('SCOUT-LEADER') private client: ClientProxy,
+    // @Inject('SCOUT-LEADER') private client: ClientProxy,
   ) { }
   buySellCheckIn = {
     // *******************************
@@ -71,7 +71,7 @@ export class AppService {
       actionInfo.amountToBuy,
       'buy',
     );
-    this.client.send({ cmd: 'market-price' }, { marketName: actionInfo.marketLow, action: "buy", asset: "SOL", currency: "USDT" });
+    // this.client.send({ cmd: 'market-price' }, { marketName: actionInfo.marketLow, action: "buy", asset: "SOL", currency: "USDT" });
 
 
     console.log('buying');
@@ -80,6 +80,7 @@ export class AppService {
       actionInfo.amountToSell,
       'sell',
     );
-    this.client.send({ cmd: 'market-price' }, { marketName: actionInfo.marketHigh, action: "buy", asset: "SOL", currency: "USDT" });
+
+    // this.client.send({ cmd: 'market-price' }, { marketName: actionInfo.marketHigh, action: "buy", asset: "SOL", currency: "USDT" });
   }
 }

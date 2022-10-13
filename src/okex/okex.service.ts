@@ -123,8 +123,8 @@ export class OkexService {
 
 
       return {
-        sol: balance.data.data[0].details[0].availBal,
-        usdt: balance.data.data[0].details[1].availBal,
+        sol: balance.data.data[0].details[1].availBal,
+        usdt: balance.data.data[0].details[0].availBal,
       };
     } catch (e) {
       console.log(e);

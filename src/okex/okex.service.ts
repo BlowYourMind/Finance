@@ -6,6 +6,8 @@ import { SignatureService } from 'src/signature/signature.service';
 
 @Injectable()
 export class OkexService {
+  solBalance;
+  usdtBalance;
   constructor(
     private readonly httpService: HttpService,
     private readonly signatureService: SignatureService,
@@ -93,7 +95,6 @@ export class OkexService {
       } else {
         console.log(e);
       }
-
       return e;
     }
   }
@@ -121,10 +122,21 @@ export class OkexService {
         ),
       );
 
-
+      balance.data.data[0].details.forEach(element => {
+        switch (element.ccy) {
+          case 'SOL':
+            this.solBalance = element.availBal;
+            break;
+          case 'USDT':
+            this.usdtBalance = element.availBal;
+            break;
+          default:
+            break;
+        }
+      });
       return {
-        sol: balance.data.data[0].details[1].availBal,
-        usdt: balance.data.data[0].details[0].availBal,
+        sol: this.solBalance,
+        usdt: this.usdtBalance,
       };
     } catch (e) {
       console.log(e);

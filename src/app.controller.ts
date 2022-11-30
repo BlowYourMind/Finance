@@ -18,6 +18,7 @@ export class AppController {
   async getBalance(@Payload() market: string) {
     const res = await this.appService.checkBalance(market);
     console.log(market);
+    console.log(Date.now().toLocaleString());
 
     console.log(res);
     return res;

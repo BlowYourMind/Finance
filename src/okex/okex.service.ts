@@ -6,7 +6,7 @@ import { SignatureService } from 'src/signature/signature.service';
 
 @Injectable()
 export class OkexService {
-  solBalance;
+  ethBalance;
   usdtBalance;
   constructor(
     private readonly httpService: HttpService,
@@ -16,7 +16,7 @@ export class OkexService {
   async buy(amount: string) {
     const nonce = new Date().toISOString();
     const postData = {
-      instId: 'SOL-USDT',
+      instId: 'ETH-USDT',
       tdMode: 'cash',
       side: 'buy',
       ordType: 'market',
@@ -60,7 +60,7 @@ export class OkexService {
   async sell(amount: string) {
     const nonce = new Date().toISOString();
     const postData = {
-      instId: 'SOL-USDT',
+      instId: 'ETH-USDT',
       tdMode: 'cash',
       side: 'sell',
       ordType: 'market',
@@ -104,12 +104,12 @@ export class OkexService {
     const signature = this.signatureService.encryptOkexData(
       nonce,
       'GET',
-      '/api/v5/account/balance?ccy=USDT,SOL',
+      '/api/v5/account/balance?ccy=USDT,ETH',
     );
     try {
       const balance = await firstValueFrom(
         this.httpService.get(
-          'https://www.okex.com/api/v5/account/balance?ccy=USDT,SOL',
+          'https://www.okex.com/api/v5/account/balance?ccy=USDT,ETH',
           {
             headers: {
               'Content-Type': 'application/json',
@@ -121,11 +121,10 @@ export class OkexService {
           },
         ),
       );
-
       balance.data.data[0].details.forEach(element => {
         switch (element.ccy) {
-          case 'SOL':
-            this.solBalance = element.availBal;
+          case 'ETH':
+            this.ethBalance = element.availBal;
             break;
           case 'USDT':
             this.usdtBalance = element.availBal;
@@ -135,7 +134,7 @@ export class OkexService {
         }
       });
       return {
-        sol: this.solBalance,
+        eth: this.ethBalance,
         usdt: this.usdtBalance,
       };
     } catch (e) {

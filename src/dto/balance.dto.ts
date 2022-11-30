@@ -1,4 +1,4 @@
 export class balanceInfo {
-  sol: string;
+  eth: string;
   usdt: string;
 }

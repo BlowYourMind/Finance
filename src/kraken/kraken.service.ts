@@ -19,7 +19,7 @@ export class KrakenService {
       ordertype: 'market',
       type: 'buy',
       volume: amount,
-      pair: 'SOLUSD',
+      pair: 'ETHUSD',
     });
     const signature = this.signatureService.encryptKrakenData(
       '/0/private/AddOrder',
@@ -60,7 +60,7 @@ export class KrakenService {
       ordertype: 'market',
       type: 'sell',
       volume: amount,
-      pair: 'SOLUSD',
+      pair: 'ETHUSD',
     });
     const signature = this.signatureService.encryptKrakenData(
       '/0/private/AddOrder',
@@ -120,7 +120,7 @@ export class KrakenService {
         ),
       );
 
-      return { sol: balance.data.result.SOL, usdt: balance.data.result.ZUSD };
+      return { eth: balance.data.result.ETH, usdt: balance.data.result.ZUSD };
     } catch (e) {
       return e;
     }

@@ -12,7 +12,7 @@ export class BinanceService {
   ) { }
   async buy(amount: string) {
     const params = {
-      symbol: 'SOLUSDT',
+      symbol: 'ETHUSDT',
       side: 'BUY',
       type: 'MARKET',
       quantity: amount,
@@ -53,7 +53,7 @@ export class BinanceService {
 
   async sell(amount: string) {
     const params = {
-      symbol: 'SOLUSDT',
+      symbol: 'ETHUSDT',
       side: 'SELL',
       type: 'MARKET',
       quantity: amount,
@@ -94,7 +94,7 @@ export class BinanceService {
 
   async check(): Promise<balanceInfo> {
     const params1 = {
-      asset: 'SOL',
+      asset: 'ETH',
       timestamp: Date.now().toString(),
     };
     const query1 = new URLSearchParams({
@@ -116,7 +116,7 @@ export class BinanceService {
       ),
     });
     try {
-      const solBalance = await firstValueFrom(
+      const ethBalance = await firstValueFrom(
         this.httpService.post(
           'https://api1.binance.com/sapi/v3/asset/getUserAsset?' + query1,
           {},
@@ -141,7 +141,7 @@ export class BinanceService {
         ),
       );
 
-      return { sol: solBalance.data[0].free, usdt: usdtBalance.data[0].free };
+      return { eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free };
     } catch (e) {
       return e;
     }

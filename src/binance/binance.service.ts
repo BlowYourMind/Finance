@@ -140,6 +140,7 @@ export class BinanceService {
           },
         ),
       );
+      console.log({ eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free });
 
       return { eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free };
     } catch (e) {

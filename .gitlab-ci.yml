@@ -64,6 +64,19 @@ deploy-ci:
         url: https://сointrade.com
     tags:
       - deploy-main
+    when:
+      - manual
+
+deploy-ci-eu:
+    <<: *deploy
+    environment:
+        name: ci-eu-central
+        url: https://сointrade.com
+    tags:
+        - deploy-main-eu-central
+    when:
+      - manual
+
 
 
 

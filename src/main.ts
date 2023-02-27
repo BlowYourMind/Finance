@@ -8,7 +8,7 @@ async function bootstrap() {
     {
       transport: Transport.REDIS,
       options: {
-        host: '38.242.203.151',
+        host: '70.34.209.155',
         password: 'andjf8*d@GS',
         port: 6379,
       },

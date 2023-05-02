@@ -1,8 +1,10 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import { log } from 'console';
 import { firstValueFrom } from 'rxjs';
 import { balanceInfo } from 'src/dto/balance.dto';
 import { SignatureService } from 'src/signature/signature.service';
+
 
 @Injectable()
 export class BinanceService {
@@ -10,9 +12,96 @@ export class BinanceService {
     private readonly httpService: HttpService,
     private readonly signatureService: SignatureService,
   ) { }
-  async buy(amount: string) {
+  async futureBuy(amount:string, asset:string) {
     const params = {
-      symbol: 'ETHUSDT',
+      symbol: asset+'USDT',
+      side: 'SELL',
+      positionSide: "SHORT",
+      type: 'MARKET',
+      quantity: amount,
+      // price: '100',
+      timestamp: Date.now().toString(),
+    };
+
+    const query = new URLSearchParams({
+      ...params,
+      signature: this.signatureService.encryptBinanceData(
+        new URLSearchParams(params).toString(),
+        process.env.BINANCE_FUTURE_TEMP_SECRET_KEY,
+      ),
+    });
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.post(
+          process.env.BINANCE_FUTURE_URL +
+          '/fapi/v1/order?' +
+          new URLSearchParams(query).toString(),
+          '',
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                process.env.BINANCE_FUTURE_TEMP_PUBLIC_KEY,
+            },
+          },
+        ),
+      );
+      // log(res.data);
+      return res.data;
+    } catch (e) {
+      if (e.data) {
+        // log(e.data);
+      } else {
+        // log(e);
+      }
+      return e;
+    }
+  }
+
+  async futureSell(amount:string, asset:string) {
+    const params = {
+      symbol: asset+'USDT',
+      side: 'SELL',
+      positionSide: "SHORT",
+      type: 'MARKET',
+      quantity: amount,
+      timestamp: Date.now().toString(),
+    };
+    const query = new URLSearchParams({
+      ...params,
+      signature: this.signatureService.encryptBinanceData(
+        new URLSearchParams(params).toString(),
+        process.env.BINANCE_TEMP_SECRET_KEY,
+      ),
+    });
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.post(
+          process.env.BINANCE_FUTURE_URL +
+          '/fapi/v1/order?' +
+          new URLSearchParams(query).toString(),
+          '',
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                process.env.BINANCE_FUTURE_TEMP_PUBLIC_KEY,
+            },
+          },
+        ),
+      );
+      // log(res.data);
+      return res.data;
+    } catch (e) {
+      if (e.data) {
+        // log(e.data);
+      } else {
+        // log(e);
+      }
+      return e;
+    }
+  }
+  async buy(amount: string, asset:string) {
+    const params = {
+      symbol: asset+'USDT',
       side: 'BUY',
       type: 'MARKET',
       quantity: amount,
@@ -22,38 +111,39 @@ export class BinanceService {
       ...params,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params).toString(),
-        '2YG7NqWK1WSzcEsPcQFeUNQWOK7AQ77EIzCBqG0euQWUASXd45bqhf3kFKtGuUi2',
+        process.env.BINANCE_TEMP_SECRET_KEY,
       ),
     });
     try {
       const res = await firstValueFrom(
         await this.httpService.post(
-          'https://api1.binance.com/api/v3/order?' +
+          process.env.BINANCE_URL +
+          '/v3/order?' +
           new URLSearchParams(query).toString(),
           '',
           {
             headers: {
               'X-MBX-APIKEY':
-                '3R0WLL5rpdZmcHhm93wXsrVQ869s6dRltxW4S6DOkDxhcrJhm2sDCrKmdnO6JQBn',
+                process.env.BINANCE_TEMP_PUBLIC_KEY,
             },
           },
         ),
       );
-      console.log(res.data);
+      // log(res.data);
+      return res.data;
     } catch (e) {
       if (e.data) {
-        console.log(e.data);
+        // log(e.data);
       } else {
-        console.log(e);
+        // log(e);
       }
-
       return e;
     }
   }
 
-  async sell(amount: string) {
+  async sell(amount: string, asset: string) {
     const params = {
-      symbol: 'ETHUSDT',
+      symbol: asset+'USDT',
       side: 'SELL',
       type: 'MARKET',
       quantity: amount,
@@ -63,31 +153,31 @@ export class BinanceService {
       ...params,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params).toString(),
-        '2YG7NqWK1WSzcEsPcQFeUNQWOK7AQ77EIzCBqG0euQWUASXd45bqhf3kFKtGuUi2',
+        process.env.BINANCE_TEMP_SECRET_KEY,
       ),
     });
     try {
       const res = await firstValueFrom(
         await this.httpService.post(
-          'https://api1.binance.com/api/v3/order?' +
+          process.env.BINANCE_URL +
+          '/v3/order?' +
           new URLSearchParams(query).toString(),
           '',
           {
             headers: {
               'X-MBX-APIKEY':
-                '3R0WLL5rpdZmcHhm93wXsrVQ869s6dRltxW4S6DOkDxhcrJhm2sDCrKmdnO6JQBn',
+                process.env.BINANCE_TEMP_PUBLIC_KEY,
             },
           },
         ),
       );
-      console.log(res.data);
+      log(res.data);
     } catch (e) {
       if (e.data) {
-        console.log(e.data);
+        log(e.data);
       } else {
-        console.log(e);
+        log(e);
       }
-
       return e;
     }
   }
@@ -101,7 +191,7 @@ export class BinanceService {
       ...params1,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params1).toString(),
-        '2YG7NqWK1WSzcEsPcQFeUNQWOK7AQ77EIzCBqG0euQWUASXd45bqhf3kFKtGuUi2',
+        process.env.BINANCE_TEMP_SECRET_KEY,
       ),
     });
     const params2 = {
@@ -112,36 +202,37 @@ export class BinanceService {
       ...params2,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params2).toString(),
-        '2YG7NqWK1WSzcEsPcQFeUNQWOK7AQ77EIzCBqG0euQWUASXd45bqhf3kFKtGuUi2',
+        process.env.BINANCE_TEMP_SECRET_KEY,
       ),
     });
     try {
       const ethBalance = await firstValueFrom(
         this.httpService.post(
-          'https://api1.binance.com/sapi/v3/asset/getUserAsset?' + query1,
+          process.env.BINANCE_SAFE_URL +
+          '/v3/asset/getUserAsset?' + query1,
           {},
           {
             headers: {
               'X-MBX-APIKEY':
-                '3R0WLL5rpdZmcHhm93wXsrVQ869s6dRltxW4S6DOkDxhcrJhm2sDCrKmdnO6JQBn',
+                process.env.BINANCE_TEMP_PUBLIC_KEY,
             },
           },
         ),
       );
       const usdtBalance = await firstValueFrom(
         this.httpService.post(
-          'https://api1.binance.com/sapi/v3/asset/getUserAsset?' + query2,
+          process.env.BINANCE_SAFE_URL +
+          '/v3/asset/getUserAsset?' + query2,
           {},
           {
             headers: {
               'X-MBX-APIKEY':
-                '3R0WLL5rpdZmcHhm93wXsrVQ869s6dRltxW4S6DOkDxhcrJhm2sDCrKmdnO6JQBn',
+                process.env.BINANCE_TEMP_PUBLIC_KEY,
             },
           },
         ),
       );
-      console.log({ eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free });
-
+      log({ eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free });
       return { eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free };
     } catch (e) {
       return e;

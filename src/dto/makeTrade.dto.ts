@@ -4,5 +4,5 @@ export class ActionInfo {
   marketLow: MarketType;
   marketHigh: MarketType;
   amountToBuy: string;
-  amountToSell: string;
+  asset: string;
 }

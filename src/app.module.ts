@@ -9,6 +9,7 @@ import { RawBodyMiddlewareMiddleware } from './middleware/raw-body.middleware';
 import { RouteInfo } from '@nestjs/common/interfaces';
 import { SignatureService } from './signature/signature.service';
 import { OkexService } from './okex/okex.service';
+import { ConfigModule } from '@nestjs/config';
 
 const rawBodyParsingRoutes: Array<RouteInfo> = [
   {
@@ -18,7 +19,10 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
 ];
 
 @Module({
-  imports: [HttpModule],
+  imports: [
+    HttpModule,
+    ConfigModule.forRoot()
+  ],
   controllers: [AppController],
   providers: [
     AppService,

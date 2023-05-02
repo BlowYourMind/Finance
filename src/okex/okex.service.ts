@@ -1,5 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
+import { log } from 'console';
 import { firstValueFrom } from 'rxjs';
 import { balanceInfo } from 'src/dto/balance.dto';
 import { SignatureService } from 'src/signature/signature.service';
@@ -13,17 +14,105 @@ export class OkexService {
     private readonly signatureService: SignatureService,
   ) { }
 
-  async buy(amount: string) {
+  async getInstruments(asset) {
+    const nonce = new Date().toISOString();
+    const signature = this.signatureService.encryptOkexData(
+      process.env.OKX_PRIVATE_KEY,
+      nonce,
+      'GET',
+      '/api/v5/public/instruments',
+    );
+    try {
+      const instruments = await firstValueFrom(
+        this.httpService.get(
+          process.env.OKX_URL +
+          '/api/v5/public/instruments?instType=FUTURES&uly=' + asset + '-USDT',
+          {
+            headers: {
+              'OK-ACCESS-KEY': process.env.OKX_API_KEY,
+              'OK-ACCESS-SIGN': signature,
+              'OK-ACCESS-PASSPHRASE': process.env.OKX_PASSPHRASE,
+              'OK-ACCESS-TIMESTAMP': nonce,
+            },
+    
+          },
+        ),
+      );
+      return instruments.data.data.map((instrument) => {
+        if(instrument.alias === 'this_week') {
+          log(instrument)
+          return instrument.instId;
+        }
+      }).filter((instrument) => instrument !== undefined)[0];
+    } catch (e) {
+      if (e.data) {
+        console.log(e.data);
+      } else {
+        console.log(e);
+      }
+    }
+  }
+  
+
+  async futureBuy(amount: string, asset: string) {
+    const instId = await this.getInstruments(asset);
+    // log(instId)
     const nonce = new Date().toISOString();
     const postData = {
-      instId: 'ETH-USDT',
-      tdMode: 'cash',
-      side: 'buy',
+      instId,
+      tdMode: 'isolated',
+      side: 'sell',
+      posSide: 'short',
+      ordType: 'market',
+      sz: '1',
+    };
+    const signature = this.signatureService.encryptOkexData(
+      process.env.OKX_PRIVATE_KEY,
+      nonce,
+      'POST',
+      '/api/v5/trade/order',
+      postData,
+    );
+    try {
+      const balance = await firstValueFrom(
+        this.httpService.post(
+          process.env.OKX_URL +
+          '/api/v5/trade/order',
+          postData,
+          {
+            headers: {
+              Content_Type: 'application/json',
+              'OK-ACCESS-KEY': process.env.OKX_API_KEY,
+              'OK-ACCESS-SIGN': signature,
+              'OK-ACCESS-PASSPHRASE': process.env.OKX_PASSPHRASE,
+              'OK-ACCESS-TIMESTAMP': nonce,
+            },
+          },
+        ),
+      );
+      console.log(balance.data);
+    } catch (e) {
+      if (e.data) {
+        console.log(e.data);
+      } else {
+        console.log(e);
+      }
+    }
+  }
+
+  async futureSell(amount: string, asset: string) {
+    const nonce = new Date().toISOString();
+    const postData = {
+      instId: asset+'-USDT',
+      tdMode: 'isolated',
+      side: 'sell',
+      posSide: 'long',
       ordType: 'market',
       sz: amount,
       tgtCcy: 'base_ccy',
     };
     const signature = this.signatureService.encryptOkexData(
+      process.env.OKX_PRIVATE_KEY,
       nonce,
       'POST',
       '/api/v5/trade/order',
@@ -52,6 +141,49 @@ export class OkexService {
       } else {
         console.log(e);
       }
+    }
+  }
+  async buy(amount: string, asset: string) {
+    const nonce = new Date().toISOString();
+    const postData = {
+      instId: asset + '-USDT',
+      tdMode: 'cash',
+      side: 'buy',
+      ordType: 'market',
+      sz: amount,
+      tgtCcy: 'base_ccy',
+    };
+    const signature = this.signatureService.encryptOkexData(
+      process.env.OKX_PRIVATE_KEY,
+      nonce,
+      'POST',
+      '/api/v5/trade/order',
+      postData,
+    );
+    try {
+      const balance = await firstValueFrom(
+        this.httpService.post(
+          process.env.OKX_URL +
+          '/api/v5/trade/order',
+          postData,
+          {
+            headers: {
+              Content_Type: 'application/json',
+              'OK-ACCESS-KEY': process.env.OKX_API_KEY,
+              'OK-ACCESS-SIGN': signature,
+              'OK-ACCESS-PASSPHRASE': process.env.OKX_PASSPHRASE,
+              'OK-ACCESS-TIMESTAMP': nonce,
+            },
+          },
+        ),
+      );
+      console.log(balance.data);
+    } catch (e) {
+      if (e.data) {
+        console.log(e.data);
+      } else {
+        console.log(e);
+      }
 
       return e;
     }
@@ -67,6 +199,7 @@ export class OkexService {
       sz: amount,
     };
     const signature = this.signatureService.encryptOkexData(
+      process.env.OKX_PRIVATE_KEY,
       nonce,
       'POST',
       '/api/v5/trade/order',
@@ -102,6 +235,7 @@ export class OkexService {
   async check(): Promise<balanceInfo> {
     const nonce = new Date().toISOString();
     const signature = this.signatureService.encryptOkexData(
+      process.env.OKX_PRIVATE_KEY,
       nonce,
       'GET',
       '/api/v5/account/balance?ccy=USDT,ETH',

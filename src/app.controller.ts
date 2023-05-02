@@ -3,10 +3,18 @@ import { AppService } from './app.service';
 import { ActionInfo } from './dto/makeTrade.dto';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { MarketType } from './dto/marketType.dto';
+import { log } from 'console';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) { }
+  constructor(private readonly appService: AppService) {
+    this.makeFutureAction({
+      asset: 'BTC',
+      marketLow: MarketType.OKEX,
+      marketHigh: MarketType.OKEX,
+      amountToBuy: '0.01',
+    });
+   }
 
   @MessagePattern({ cmd: 'ping' })
   async ping(@Payload() test: string) {
@@ -15,7 +23,7 @@ export class AppController {
   }
 
   @MessagePattern({ cmd: 'get-balance' })
-  async getBalance(@Payload() market: string) {
+  async getBalance(@Payload() market: MarketType) {
     const res = await this.appService.checkBalance(market);
     console.log(market);
     console.log(Date.now().toLocaleString());
@@ -26,7 +34,12 @@ export class AppController {
 
   @EventPattern('make-trade')
   makeAction(actionInfo: ActionInfo) {
-    this.appService.makeAction(actionInfo);
-    return 'info getted';
+    return 'Disabled function';
+  }
+
+  @EventPattern('make-future-trade')
+  makeFutureAction(actionFutureInfo: ActionInfo) {
+    this.appService.makeFutureAction(actionFutureInfo);
+    return 'Everything Setted';
   }
 }

@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ActionInfo } from './dto/makeTrade.dto';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
@@ -33,7 +33,7 @@ export class AppController {
   }
 
   // http request get balance from markets
-  @Post('get-balance')
+  @Get('get-balance')
   async getBalanceHttp() {
     const res = await this.appService.getAllBalances();
     console.log(res);

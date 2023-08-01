@@ -60,22 +60,10 @@ docker-build:
 deploy-ci:
     <<: *deploy
     environment:
-        name: ci
+        name: gitlab-runner 
         url: https://сointrade.com
     tags:
-      - deploy-main
-    when:
-      - manual
-
-deploy-ci-eu:
-    <<: *deploy
-    environment:
-        name: ci-eu-central
-        url: https://сointrade.com
-    tags:
-        - deploy-main-eu-central
-    when:
-      - manual
+      - deploy-slave
 
 
 

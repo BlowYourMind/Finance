@@ -10,6 +10,15 @@ import { OkexWallets } from './dto/okex.dto';
 
 type ActionType = 'sell' | 'buy' | 'check' | 'futureSell' | 'futureBuy';
 
+interface MarketBalanceDto{
+  name: string;
+  details: MarketDetailDto[];
+}
+
+interface MarketDetailDto{
+  [key: string]: string;
+}
+
 @Injectable()
 export class AppService {
   markets = {
@@ -24,6 +33,15 @@ export class AppService {
     private readonly cryptoService: CryptoService,
     private readonly okexService: OkexService,
   ) {
+  }
+
+
+
+  async getAllBalances() {
+    const res = await this.markets[MarketType.BINANCE].check('USDT');
+    const res2 = await this.markets[MarketType.KRAKEN].check();
+    const res3 = await this.markets[MarketType.OKEX].check('USDT');
+    return [{name: 'binance', details: [res]}, {name: 'kraken', details: [{usdt: res2.usdt}]}, {name: 'okx',details: [res3]}];
   }
 
   async checkBalance(market: MarketType) {

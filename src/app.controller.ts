@@ -1,4 +1,4 @@
-import { Controller } from '@nestjs/common';
+import { Controller, Post } from '@nestjs/common';
 import { AppService } from './app.service';
 import { ActionInfo } from './dto/makeTrade.dto';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
@@ -7,12 +7,13 @@ import { MarketType } from './dto/marketType.dto';
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {
-    this.makeFutureAction({
-      asset: 'ETH',
-      marketLow: MarketType.BINANCE,
-      marketHigh: MarketType.BINANCE,
-      amountToBuy: '0.00939408',
-    });
+    // this.makeFutureAction({
+    //   asset: 'ETH',
+    //   marketLow: MarketType.BINANCE,
+    //   marketHigh: MarketType.BINANCE,
+    //   amountToBuy: '0.00939408',
+    // });
+    // this.getBalanceHttp();
    }
 
   @MessagePattern({ cmd: 'ping' })
@@ -27,6 +28,14 @@ export class AppController {
     console.log(market);
     console.log(Date.now().toLocaleString());
 
+    console.log(res);
+    return res;
+  }
+
+  // http request get balance from markets
+  @Post('get-balance')
+  async getBalanceHttp() {
+    const res = await this.appService.getAllBalances();
     console.log(res);
     return res;
   }

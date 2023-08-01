@@ -373,8 +373,8 @@ export class BinanceService {
           },
         ),
       );
-      log({ [asset.toLowerCase()]: res.data[0].free });
-      return { [asset.toLowerCase()]: res.data[0].free };
+      // log({ [asset.toLowerCase()]: res.data[0].free });
+      return { [asset.toLowerCase()]: res.data[0] ? res.data[0].free : 0 };
     } catch (e) {
       return e;
     }

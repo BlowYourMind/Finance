@@ -1,6 +1,6 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
-import { log } from 'console';
+import { info, log } from 'console';
 import { firstValueFrom } from 'rxjs';
 import { BalanceInfo } from 'src/dto/balance.dto';
 import { OkexWallets } from 'src/dto/okex.dto';
@@ -368,7 +368,7 @@ export class OkexService {
           },
         ),
       );
-      return {[asset.toLowerCase()]: balance.data.data[0].details[0].availBal};
+      return {[asset.toLowerCase()]: balance.data.data[0].details[0] ? balance.data.data[0].details[0].availBal : '0'};
     } catch (e) {
       console.log(e);
 

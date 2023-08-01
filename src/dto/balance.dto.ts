@@ -1,4 +1,3 @@
-export class balanceInfo {
-  eth: string;
-  usdt: string;
+export class BalanceInfo {
+  [name: string]: string;
 }

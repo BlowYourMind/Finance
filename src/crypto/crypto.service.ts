@@ -1,7 +1,7 @@
 import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
-import { balanceInfo } from 'src/dto/balance.dto';
+import { BalanceInfo } from 'src/dto/balance.dto';
 
 @Injectable()
 export class CryptoService {
@@ -43,7 +43,7 @@ export class CryptoService {
       }),
     );
   }
-  async check(): Promise<balanceInfo> {
+  async check(): Promise<BalanceInfo> {
     console.log('check');
     return {
       eth: '0.00',

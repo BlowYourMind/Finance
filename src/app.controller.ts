@@ -3,16 +3,15 @@ import { AppService } from './app.service';
 import { ActionInfo } from './dto/makeTrade.dto';
 import { EventPattern, MessagePattern, Payload } from '@nestjs/microservices';
 import { MarketType } from './dto/marketType.dto';
-import { log } from 'console';
 
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {
     this.makeFutureAction({
-      asset: 'BTC',
-      marketLow: MarketType.OKEX,
-      marketHigh: MarketType.OKEX,
-      amountToBuy: '0.01',
+      asset: 'ETH',
+      marketLow: MarketType.BINANCE,
+      marketHigh: MarketType.BINANCE,
+      amountToBuy: '0.00939408',
     });
    }
 

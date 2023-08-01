@@ -2,7 +2,7 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { log } from 'console';
 import { firstValueFrom } from 'rxjs';
-import { balanceInfo } from 'src/dto/balance.dto';
+import { BalanceInfo } from 'src/dto/balance.dto';
 import { SignatureService } from 'src/signature/signature.service';
 
 
@@ -12,6 +12,7 @@ export class BinanceService {
     private readonly httpService: HttpService,
     private readonly signatureService: SignatureService,
   ) { }
+
   async futureBuy(amount:string, asset:string) {
     const params = {
       symbol: asset+'USDT',
@@ -22,12 +23,11 @@ export class BinanceService {
       // price: '100',
       timestamp: Date.now().toString(),
     };
-
     const query = new URLSearchParams({
       ...params,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params).toString(),
-        process.env.BINANCE_FUTURE_TEMP_SECRET_KEY,
+        process.env.BINANCE_SECRET_KEY,
       ),
     });
     try {
@@ -40,7 +40,7 @@ export class BinanceService {
           {
             headers: {
               'X-MBX-APIKEY':
-                process.env.BINANCE_FUTURE_TEMP_PUBLIC_KEY,
+                process.env.BINANCE_PUBLIC_KEY,
             },
           },
         ),
@@ -70,7 +70,7 @@ export class BinanceService {
       ...params,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params).toString(),
-        process.env.BINANCE_TEMP_SECRET_KEY,
+        process.env.BINANCE_SECRET_KEY,
       ),
     });
     try {
@@ -99,6 +99,7 @@ export class BinanceService {
       return e;
     }
   }
+
   async buy(amount: string, asset:string) {
     const params = {
       symbol: asset+'USDT',
@@ -111,20 +112,20 @@ export class BinanceService {
       ...params,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params).toString(),
-        process.env.BINANCE_TEMP_SECRET_KEY,
+        process.env.BINANCE_SECRET_KEY,
       ),
     });
     try {
       const res = await firstValueFrom(
         await this.httpService.post(
           process.env.BINANCE_URL +
-          '/v3/order?' +
+          '/api/v3/order?' +
           new URLSearchParams(query).toString(),
           '',
           {
             headers: {
               'X-MBX-APIKEY':
-                process.env.BINANCE_TEMP_PUBLIC_KEY,
+                process.env.BINANCE_PUBLIC_KEY,
             },
           },
         ),
@@ -182,58 +183,198 @@ export class BinanceService {
     }
   }
 
-  async check(): Promise<balanceInfo> {
+  async moveAssetsToFuture(amount: string, asset: string) {
+    const params = {
+      asset: asset,
+      amount: amount,
+      type: '1',
+      timestamp: Date.now().toString(),
+    };
+    const query = new URLSearchParams(
+      {
+        ...params,
+        signature: this.signatureService.encryptBinanceData(
+          new URLSearchParams(params).toString(),
+          process.env.BINANCE_SECRET_KEY,
+        ), 
+      }
+    );
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.post(
+          process.env.BINANCE_URL +
+          '/sapi/v1/asset/transfer?' +
+          new URLSearchParams(query).toString(),
+          '',
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                process.env.BINANCE_PUBLIC_KEY,
+            },
+          },
+        ),
+      );
+      // log(res.data);
+      return res.data;
+    } catch (e) {
+      if (e.data) {
+        // log(e.data);
+      } else {
+        // log(e);
+      }
+      return e;
+    }
+  }
+
+  async getCapitalConfig(asset: string) {
+    const params = {
+      timestamp: Date.now().toString(),
+    };
+    const query = new URLSearchParams(
+      {
+        ...params,
+        signature: this.signatureService.encryptBinanceData(
+          new URLSearchParams(params).toString(),
+          process.env.BINANCE_SECRET_KEY,
+        ),
+      }
+    );
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.get(
+          process.env.BINANCE_URL +
+          '/sapi/v1/capital/config/getall?' +
+          new URLSearchParams(query).toString(),
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                process.env.BINANCE_PUBLIC_KEY,
+            },
+          },
+        ),
+      );
+      // log(res.data);
+      return res.data.filter((item: any) => item.coin === asset)[0].networkList;
+    } catch (e) {
+      if (e.data) {
+        log(e.data);
+      } else {
+        log(e);
+      }
+      return e;
+    }
+  }
+
+
+  async makeWithdrawal(amount: string, asset: string, address: string) {
+    const params = {
+      coin: asset,
+      withdrawOrderId: Date.now().toString(),
+      network: 'ETH',
+      address: address,
+      amount: amount,
+      timestamp: Date.now().toString(),
+    };
+    const query = new URLSearchParams({
+      ...params,
+      signature: this.signatureService.encryptBinanceData(
+        new URLSearchParams(params).toString(),
+        process.env.BINANCE_SECRET_KEY,
+      ),
+    });
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.post(
+          process.env.BINANCE_URL +
+          '/sapi/v1/capital/withdraw/apply?' +
+          new URLSearchParams(query).toString(),
+          '',
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                process.env.BINANCE_PUBLIC_KEY,
+            },
+          },
+        ),
+      );
+      log(res.data);
+      return res.data;
+    } catch (e) {
+      if (e.data) {
+        log(e.data);
+      } else {
+        log(e);
+      }
+      return e;
+    }
+  }
+
+  async getDepositAddress(asset: string) {
+    const params = {
+      coin: asset,
+      timestamp: Date.now().toString(),
+    };
+    const query = new URLSearchParams({
+      ...params,
+      signature: this.signatureService.encryptBinanceData(
+        new URLSearchParams(params).toString(),
+        process.env.BINANCE_SECRET_KEY,
+      ),
+    });
+    try {
+      const res = await firstValueFrom(
+        await this.httpService.get(
+          process.env.BINANCE_URL +
+          '/sapi/v1/capital/deposit/address?' +
+          new URLSearchParams(query).toString(),
+          {
+            headers: {
+              'X-MBX-APIKEY':
+                process.env.BINANCE_PUBLIC_KEY,
+            },
+          },
+        ),
+      );
+      log(res.data);
+      return res.data;
+    } catch (e) {
+      if (e.data) {
+        log(e.data);
+      } else {
+        log(e);
+      }
+      return e;
+    }
+  }
+
+  async check(asset: string ): Promise<BalanceInfo> {
     const params1 = {
-      asset: 'ETH',
+      asset,
       timestamp: Date.now().toString(),
     };
     const query1 = new URLSearchParams({
       ...params1,
       signature: this.signatureService.encryptBinanceData(
         new URLSearchParams(params1).toString(),
-        process.env.BINANCE_TEMP_SECRET_KEY,
-      ),
-    });
-    const params2 = {
-      asset: 'USDT',
-      timestamp: Date.now().toString(),
-    };
-    const query2 = new URLSearchParams({
-      ...params2,
-      signature: this.signatureService.encryptBinanceData(
-        new URLSearchParams(params2).toString(),
-        process.env.BINANCE_TEMP_SECRET_KEY,
+        process.env.BINANCE_SECRET_KEY,
       ),
     });
     try {
-      const ethBalance = await firstValueFrom(
+      const res = await firstValueFrom(
         this.httpService.post(
-          process.env.BINANCE_SAFE_URL +
-          '/v3/asset/getUserAsset?' + query1,
+          process.env.BINANCE_URL +
+          '/sapi/v3/asset/getUserAsset?' + query1,
           {},
           {
             headers: {
               'X-MBX-APIKEY':
-                process.env.BINANCE_TEMP_PUBLIC_KEY,
+                process.env.BINANCE_PUBLIC_KEY,
             },
           },
         ),
       );
-      const usdtBalance = await firstValueFrom(
-        this.httpService.post(
-          process.env.BINANCE_SAFE_URL +
-          '/v3/asset/getUserAsset?' + query2,
-          {},
-          {
-            headers: {
-              'X-MBX-APIKEY':
-                process.env.BINANCE_TEMP_PUBLIC_KEY,
-            },
-          },
-        ),
-      );
-      log({ eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free });
-      return { eth: ethBalance.data[0].free, usdt: usdtBalance.data[0].free };
+      log({ [asset.toLowerCase()]: res.data[0].free });
+      return { [asset.toLowerCase()]: res.data[0].free };
     } catch (e) {
       return e;
     }

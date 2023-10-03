@@ -2,46 +2,33 @@ import { HttpService } from '@nestjs/axios';
 import { Injectable } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { BalanceInfo } from 'src/dto/balance.dto';
+import * as colors from "colors"
+import { CatchAll } from 'src/try.decorator';
+import { log } from 'console';
+colors.enable();
 
+@CatchAll((err, ctx) => {
+  log(`\n[INFO] Error in service '${ctx.constructor.name}'\n`.cyan);
+  log(`[ERROR] Error message: ${err.message} \n`.red);
+  log(`[ERROR] Error stack: ${err.stack}\n`.red);
+})
 @Injectable()
 export class CryptoService {
-  constructor(private readonly httpService: HttpService) {}
- async futureBuy(amount: string, asset:string) {
+  constructor(private readonly httpService: HttpService) { }
+  async futureBuy(amount: string, asset: string) {
     console.log('bought');
     return;
-    return firstValueFrom(
-      this.httpService.post('https://api1.binance.com/api/v3/order', {
-        symbol: 'BTCUSDT',
-        side: 'BUY',
-        type: 'MARKET',
-        quantity: amount,
-      }),
-    );
   }
   async buy(amount: string) {
     console.log('bought');
     return;
-    return firstValueFrom(
-      this.httpService.post('https://api1.binance.com/api/v3/order', {
-        symbol: 'BTCUSDT',
-        side: 'BUY',
-        type: 'MARKET',
-        quantity: amount,
-      }),
-    );
+
   }
 
   async sell(amount: string) {
     console.log('sold');
     return;
-    return firstValueFrom(
-      this.httpService.post('https://api1.binance.com/api/v3/order', {
-        symbol: 'BTCUSDT',
-        side: 'SELL',
-        type: 'MARKET',
-        quantity: amount,
-      }),
-    );
+
   }
   async check(): Promise<BalanceInfo> {
     console.log('check');

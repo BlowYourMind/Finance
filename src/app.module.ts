@@ -21,7 +21,7 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
 @Module({
   imports: [
     HttpModule,
-    ConfigModule.forRoot()
+    ConfigModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [
@@ -38,8 +38,5 @@ export class AppModule {
     consumer
       .apply(RawBodyMiddlewareMiddleware)
       .forRoutes(...rawBodyParsingRoutes);
-    // .apply(JsonBodyMiddleware) example of setting middleware
-    // .exclude(...rawBodyParsingRoutes)
-    // .forRoutes('*')
   }
 }

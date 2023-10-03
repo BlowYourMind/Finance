@@ -8,10 +8,10 @@ async function bootstrap() {
     {
       transport: Transport.REDIS,
       options: {
-        host: '70.34.209.155',
-        password: 'andjf8*d@GS',
-        port: 6379,
-      },
+        host: process.env.REDIS_HOST,
+        password: process.env.REDIS_PASSWORD,
+        port: parseInt(process.env.REDIS_PORT),
+      }
     },
   );
   await app.listen();

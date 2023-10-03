@@ -5,4 +5,5 @@ export class ActionInfo {
   marketHigh: MarketType;
   amountToBuy: string;
   asset: string;
+  aproxStableValue?: string;
 }

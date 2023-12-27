@@ -14,6 +14,7 @@ colors.enable();
   log(`\n[INFO] Error in service '${ctx.constructor.name}'\n`.cyan);
   log(`[ERROR] Error message: ${err.message} \n`.red);
   log(`[ERROR] Error stack: ${err.stack}\n`.red);
+  log(err)
 })
 @Injectable()
 export class KrakenService {
@@ -21,27 +22,35 @@ export class KrakenService {
     private readonly httpService: HttpService,
   ) { }
 
+  // add websocket to know when there is account wallet update
+  async WSGetBalance() {
+    const nonce = Date.now();
+    const postData = new URLSearchParams({ nonce: nonce.toString() });
+    const signature = await this.sign(KrakenUrls.BALANCE, postData, nonce);
+    const balance = await this.waitForValue(KrakenUrls.BALANCE, postData, signature, nonce);
+    return balance.data.result
+  }
 
-  async withdrawInfo(asset: string, amount: string, address:string) {
+  async withdrawInfo(asset: string, amount: string, address: string) {
     const nonce = Date.now();
     const postData = new URLSearchParams({
       nonce: nonce.toString(),
       asset: asset,
-      key: address === '0xe3dcb529ccf85b76e6364f8492210aa70247f223' ? 'okx_eth' :'binance_eth',
+      key: address === '0xe3dcb529ccf85b76e6364f8492210aa70247f223' ? 'okx_eth' : 'binance_eth',
       amount: amount,
     });
     const signature = await this.sign(KrakenUrls.WITHDRAW_INFO, postData, nonce);
     const response = await this.waitForValue(KrakenUrls.WITHDRAW_INFO, postData, signature, nonce);
     return response.data.result.limit;
   }
-  async transfer(asset:string, amount: string, address: string) {
-    const limit= await this.withdrawInfo(asset, amount, address);
+  async transfer(asset: string, amount: string, address: string) {
+    const limit = await this.withdrawInfo(asset, amount, address);
     const nonce = Date.now();
     const postData = new URLSearchParams({
       asset: asset,
       address: address,
       amount: limit,
-      key: address === '0xe3dcb529ccf85b76e6364f8492210aa70247f223' ? 'okx_eth' :'binance_eth',
+      key: address === '0xe3dcb529ccf85b76e6364f8492210aa70247f223' ? 'okx_eth' : 'binance_eth',
       nonce: nonce.toString(),
     });
     const signature = await this.sign(KrakenUrls.WITHDRAW, postData, nonce);
@@ -84,7 +93,7 @@ export class KrakenService {
       nonce: nonce.toString(),
     });
     const signature = await this.sign(KrakenUrls.DEPOSIT_METHODS, postData, nonce);
-    const response: {method:string, limit: boolean, 'gen-address': boolean, minimum: string}[] = (await this.waitForValue(KrakenUrls.DEPOSIT_METHODS, postData, signature, nonce)).data.result;
+    const response: { method: string, limit: boolean, 'gen-address': boolean, minimum: string }[] = (await this.waitForValue(KrakenUrls.DEPOSIT_METHODS, postData, signature, nonce)).data.result;
     return response.filter((elem) => elem.method === 'Ethereum (ERC20)');
   }
 
@@ -99,11 +108,11 @@ export class KrakenService {
     const signature = await this.sign(KrakenUrls.DEPOSIT_ADDRESS, postData, nonce);
     try {
       const response = await this.waitForValue(KrakenUrls.DEPOSIT_ADDRESS, postData, signature, nonce);
-      const result: Promise<{ method: string, limit: boolean, 'gen-address': boolean }[]>  = response.data.result;
-      if(response.data.result.length === 0) throw new Error('No address found');
+      const result: Promise<{ method: string, limit: boolean, 'gen-address': boolean }[]> = response.data.result;
+      if (response.data.result.length === 0) throw new Error('No address found');
       return result[0];
-    }catch  (e) {
-      if(e.message === 'No address found') {
+    } catch (e) {
+      if (e.message === 'No address found') {
         const nonce = Date.now();
         const postData = new URLSearchParams({
           asset: asset,
@@ -113,7 +122,7 @@ export class KrakenService {
         });
         const signature = await this.sign(KrakenUrls.DEPOSIT_ADDRESS, postData, nonce);
         const response = await this.waitForValue(KrakenUrls.DEPOSIT_ADDRESS, postData, signature, nonce);
-        const result: Promise<{ method: string, limit: boolean, 'gen-address': boolean }[]>  = response.data.result;
+        const result: Promise<{ method: string, limit: boolean, 'gen-address': boolean }[]> = response.data.result;
         return result[0];
       }
     }
@@ -224,25 +233,37 @@ export class KrakenService {
     });
     const signature = await this.sign(KrakenUrls.ADD_ORDER, postData, nonce);
     const res = await this.waitForValue(KrakenUrls.ADD_ORDER, postData, signature, nonce);
+    log(res.data)
     const txid = res.data.result.txid[0];
     const order = await this.waitUntilOrderIsClosed(txid);
     return { result: order.result[txid], txid };
   }
 
   async sell(amount: string, asset: string): Promise<BalanceInfo> {
+    const volume = Number((await this.checkAll())['X' + asset.toUpperCase()]).toFixed(5);
+    log(volume)
     const nonce = Date.now();
     const postData = new URLSearchParams({
       nonce: nonce.toString(),
       ordertype: 'market',
       type: 'sell',
-      volume: amount,
+      volume: volume,
       pair: asset === 'USD' ? 'USDT' + asset : asset + 'USDT',
     });
     const signature = await this.sign(KrakenUrls.ADD_ORDER, postData, nonce);
     const balance = await this.waitForValue(KrakenUrls.ADD_ORDER, postData, signature, nonce);
+    log(balance)
     const txid = balance.data.result.txid[0];
     const order = await this.waitUntilOrderIsClosed(txid);
     return await this.waitUntilAssetIsOnWallet(asset, (order.result[txid].cost - order.result[txid].fee).toFixed(2));
+  }
+
+  async checkAll(): Promise<BalanceInfo> {
+    const nonce = Date.now();
+    const postData = new URLSearchParams({ nonce: nonce.toString() });
+    const signature = await this.sign(KrakenUrls.BALANCE, postData, nonce);
+    const balance = await this.waitForValue(KrakenUrls.BALANCE, postData, signature, nonce);
+    return balance.data.result;
   }
 
   async check(asset: string): Promise<BalanceInfo> {
@@ -250,6 +271,6 @@ export class KrakenService {
     const postData = new URLSearchParams({ nonce: nonce.toString() });
     const signature = await this.sign(KrakenUrls.BALANCE, postData, nonce);
     const balance = await this.waitForValue(KrakenUrls.BALANCE, postData, signature, nonce);
-    return { [asset]: balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()] };
+    return { [asset.toLowerCase()]: balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()] };
   }
 }

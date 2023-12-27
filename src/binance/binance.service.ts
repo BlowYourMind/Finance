@@ -13,12 +13,32 @@ colors.enable();
   log(`\n[INFO] Error in service '${ctx.constructor.name}'\n`.cyan);
   log(`[ERROR] Error message: ${err.message} \n`.red);
   log(`[ERROR] Error stack: ${err.stack}\n`.red);
+  log(err)
 })
 @Injectable()
 export class BinanceService {
   constructor(
     private readonly httpService: HttpService,
   ) { }
+  async webSocketBalance() {
+    const ws = new WebSocket('wss://ws-api.binance.com:443/ws-api/v3');
+    ws.onopen = () => {
+      ws.send(JSON.stringify({
+        "method": "account.status", "params": {
+          apiKey: process.env.BINANCE_API_KEY,
+          signature: SignatureService.encryptBinanceData(
+            new URLSearchParams({ timestamp: Date.now().toString() }).toString(),
+            process.env.BINANCE_SECRET_KEY,
+          ),
+          timestamp: Date.now(),
+        }
+      }))
+
+    };
+    ws.onmessage = (event) => {
+      console.log(event.data);
+    };
+  }
 
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
     await this.moveAssetsTo({ amount: approxStableValue, asset: 'USDT', type: BinanceTransferTypes.MAIN_UMFUTURE });
@@ -32,6 +52,12 @@ export class BinanceService {
     return (await this.makeRequest(BinanceUrls.ORDER, query)).data;
   }
 
+  async delay(ms: number) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
   async futureSell(amount: string, asset: string) {
     const res = await this.makeRequest(BinanceUrls.FUTURE_ORDER, await this.makeQuery(await this.makeFutureParams(asset, amount)), 'POST', true);
     await this.moveAssetsTo({ amount: (await this.checkFuture())['usdt'], asset: 'USDT', type: BinanceTransferTypes.UMFUTURE_MAIN });
@@ -39,7 +65,8 @@ export class BinanceService {
   }
 
   async sell(amount: string, asset: string) {
-    const query = await this.makeQuery({ symbol: asset + 'USDT', side: 'SELL', type: 'MARKET', quantity: amount });
+    const limit = await this.getCapitalConfig(asset);
+    const query = await this.makeQuery({ symbol: asset + 'USDT', side: 'SELL', type: 'MARKET', quantity: limit.free });
     return (await this.makeRequest(BinanceUrls.ORDER, query)).data;
   }
 
@@ -98,7 +125,7 @@ export class BinanceService {
       ...params,
       timestamp,
       signature: SignatureService.encryptBinanceData(
-        new URLSearchParams({...params, timestamp }).toString(),
+        new URLSearchParams({ ...params, timestamp }).toString(),
         process.env.BINANCE_SECRET_KEY,
       ),
     }).toString();

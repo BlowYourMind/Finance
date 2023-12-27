@@ -20,6 +20,7 @@ enum OkexUlys {
   log(`\n[INFO] Error in service '${ctx.constructor.name}'\n`.cyan);
   log(`[ERROR] Error message: ${err} \n`.red);
   log(`[ERROR] Error stack: ${err.stack}\n`.red);
+  log(err)
 })
 @Injectable()
 export class OkexService {
@@ -44,9 +45,11 @@ export class OkexService {
       this.httpService[command](
         process.env.OKX_URL + path,
         method === 'POST' ? postData : { headers: SignatureService.createOKXHeader(signature, nonce) },
-        method === 'POST' ? {
-          headers: SignatureService.createOKXHeader(signature, nonce),
-        } : undefined,
+        method === 'POST' ?
+          {
+            headers: SignatureService.createOKXHeader(signature, nonce),
+          }
+          : undefined,
       ),
     );
   }
@@ -81,7 +84,7 @@ export class OkexService {
     const path = OkexUrls.DEPOSIT_ADDRESS + '?' + new URLSearchParams({ ccy: asset }).toString();
     const signature = await this.sign(path, undefined, nonce, 'GET');
     const address = await this.waitForValue(path, undefined, signature, nonce, 'GET');
-    return {address:address.data.data[0].addr};
+    return { address: address.data.data[0].addr };
   }
 
   async getOrderSizeFromContractSize(lotSz: string, amount: string): Promise<string> {
@@ -155,6 +158,12 @@ export class OkexService {
     return balance.data;
   }
 
+  async delay(ms: number = 1000 * 60 * 10) {
+    return new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+  }
+
   async buy(amount: string, asset: string, approxStableValue: string) {
     const nonce = new Date().toISOString();
     await this.moveFundsFromTo(approxStableValue, 'USDT', OkexWallets.FUNDING, OkexWallets.TRADING);
@@ -174,6 +183,8 @@ export class OkexService {
       postData,
     );
     const balance = await this.waitForValue(OkexUrls.ORDER, postData, signature, nonce);
+    const limit = await this.checkTrading(asset);
+    await this.moveFundsFromTo(limit[asset.toLowerCase()], asset, OkexWallets.TRADING, OkexWallets.FUNDING);
     return balance.data.data[0];
   }
 
@@ -204,7 +215,7 @@ export class OkexService {
     const path = OkexUrls.TRADE_BALANCE + params;
     const signature = await this.sign(path, undefined, nonce, 'GET');
     const balance = (await this.waitForValue(path, undefined, signature, nonce, 'GET')).data.data[0];
-    return { [asset ? asset.toLowerCase() : 'usdt']: balance ? balance.availBal : '0' };
+    return { [asset ? asset.toLowerCase() : 'usdt']: balance.details[0] ? balance.details[0].availBal : '0' };
   }
   async makeFutureParams(instId: string, quantity: string, side: 'sell' | 'buy' = 'buy') {
     return { instId: (await this.getInstrument(instId)).instId, tdMode: 'isolated', side, posSide: 'SHORT', ordType: 'market', sz: await this.getOrderSizeFromContractSize((await this.getInstrument(instId)).ctVal, quantity) };

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Get, Injectable } from '@nestjs/common';
 import { BinanceService } from './binance/binance.service';
 import { CryptoService } from './crypto/crypto.service';
 import { ActionInfo } from './dto/makeTrade.dto';
@@ -7,14 +7,9 @@ import { OkexService } from './okex/okex.service';
 import { log } from 'console';
 import { CatchAll } from './try.decorator';
 import * as colors from 'colors';
-import { MarketType } from './dto/marketType.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
 colors.enable();
 
-@CatchAll((err, ctx) => {
-  log(`\n[INFO] Error in service '${ctx.constructor.name}'\n`.cyan);
-  log(`[ERROR] Error message: ${err.message} \n`.red);
-  log(`[ERROR] Error stack: ${err.stack}\n`.red);
-})
 @Injectable()
 export class AppService {
   markets = {
@@ -29,21 +24,14 @@ export class AppService {
     private readonly cryptoService: CryptoService,
     private readonly okexService: OkexService,
   ) {
-    this.makeAction({
-      amountToBuy: '0.015',
-      asset: 'ETH',
-      aproxStableValue: '16',
-      marketHigh: MarketType.BINANCE,
-      marketLow: MarketType.OKEX,
-    });
+    // this.makeAction({
+    //   amountToBuy: '0.015',
+    //   asset: 'ETH',
+    //   aproxStableValue: '16',
+    //   marketHigh: MarketType.BINANCE,
+    //   marketLow: MarketType.OKEX,
+    // });
   }
-
-  async delay(ms: number) {
-    return new Promise((resolve) => {
-      setTimeout(resolve, ms);
-    });
-  }
-
   async makeAction({
     marketHigh,
     marketLow,
@@ -58,7 +46,6 @@ export class AppService {
       asset,
       aproxStableValue,
     );
-    await this.delay(1000 * 30);
     // Get deposit network/method
     const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
       asset,
@@ -75,7 +62,6 @@ export class AppService {
       address.address,
     );
     // Sell High and Future Lock
-    await this.delay(1000 * 60 * 10);
     await this.markets[marketHigh]['sell'](amountToBuy, asset);
     await this.markets[marketHigh]['futureSell'](amountToBuy, asset);
   }

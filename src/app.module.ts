@@ -10,6 +10,7 @@ import { RouteInfo } from '@nestjs/common/interfaces';
 import { SignatureService } from './signature/signature.service';
 import { OkexService } from './okex/okex.service';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 
 const rawBodyParsingRoutes: Array<RouteInfo> = [
   {
@@ -22,6 +23,7 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
   imports: [
     HttpModule,
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

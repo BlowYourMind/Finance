@@ -32,7 +32,7 @@ export enum BinanceUrls {
   ORDER = '/api/v3/order',
   FUTURE_ORDER = '/fapi/v1/order',
   BALANCE = '/api/v3/account',
-  GET_ASSET = '/sapi/v3/asset/getUserAsset w',
+  GET_ASSET = '/sapi/v3/asset/getUserAsset',
   FUTURE_BALANCE = '/fapi/v2/balance',
   FUTURE_POSITION = '/fapi/v2/positionRisk',
   TRANSFER = '/sapi/v1/asset/transfer',

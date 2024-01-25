@@ -62,6 +62,10 @@ export class SignatureService {
       .digest('base64');
   }
 
+  public encryptBinanceWSData(data: string, key: string) {
+
+  }
+
   public static encryptBinanceData(data: string, key: string) {
     return createHmac('sha256', key).update(data).digest('hex');
   }

@@ -5,39 +5,20 @@ import { firstValueFrom } from 'rxjs';
 import { BalanceInfo } from 'src/dto/balance.dto';
 import { SignatureService } from 'src/signature/signature.service';
 import * as colors from "colors"
-import { CatchAll } from 'src/try.decorator';
 import { BinanceUrls } from 'src/configs/urls';
 import { BinanceTransferTypes, BinanceMoveParameters, BinanceFutureActionParams } from 'src/dto/binance.dto';
+import { Cron, CronExpression } from '@nestjs/schedule';
+
 colors.enable();
-@CatchAll((err, ctx) => {
-  log(`\n[INFO] Error in service '${ctx.constructor.name}'\n`.cyan);
-  log(`[ERROR] Error message: ${err.message} \n`.red);
-  log(`[ERROR] Error stack: ${err.stack}\n`.red);
-  log(err)
-})
 @Injectable()
 export class BinanceService {
   constructor(
-    private readonly httpService: HttpService,
-  ) { }
-  async webSocketBalance() {
-    const ws = new WebSocket('wss://ws-api.binance.com:443/ws-api/v3');
-    ws.onopen = () => {
-      ws.send(JSON.stringify({
-        "method": "account.status", "params": {
-          apiKey: process.env.BINANCE_API_KEY,
-          signature: SignatureService.encryptBinanceData(
-            new URLSearchParams({ timestamp: Date.now().toString() }).toString(),
-            process.env.BINANCE_SECRET_KEY,
-          ),
-          timestamp: Date.now(),
-        }
-      }))
+    private readonly httpService: HttpService) {
+  }
 
-    };
-    ws.onmessage = (event) => {
-      console.log(event.data);
-    };
+  @Cron(CronExpression.EVERY_MINUTE)
+  async updageBlanace() {
+    log(await this.check());
   }
 
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
@@ -59,8 +40,24 @@ export class BinanceService {
   }
 
   async futureSell(amount: string, asset: string) {
-    const res = await this.makeRequest(BinanceUrls.FUTURE_ORDER, await this.makeQuery(await this.makeFutureParams(asset, amount)), 'POST', true);
-    await this.moveAssetsTo({ amount: (await this.checkFuture())['usdt'], asset: 'USDT', type: BinanceTransferTypes.UMFUTURE_MAIN });
+    const res = await this.makeRequest(
+      BinanceUrls.FUTURE_ORDER,
+      await this.makeQuery(
+        await this.makeFutureParams(
+          asset,
+          amount
+        )
+      ),
+      'POST',
+      true
+    );
+    await this.moveAssetsTo(
+      {
+        amount: (await this.checkFuture())['usdt'],
+        asset: 'USDT',
+        type: BinanceTransferTypes.UMFUTURE_MAIN
+      }
+    );
     return res.data;
   }
 
@@ -83,7 +80,11 @@ export class BinanceService {
   }
 
   async check(asset: string = 'USDT'): Promise<BalanceInfo> {
-    const res = await this.makeRequest(BinanceUrls.GET_ASSET, await this.makeQuery({ asset }), 'GET');
+    const res = await this.makeRequest(
+      BinanceUrls.GET_ASSET,
+      await this.makeQuery({ asset }),
+      'POST'
+    );
     return { [asset.toLowerCase()]: res.data[0] ? res.data[0].free : 0 };
   }
 
@@ -120,28 +121,33 @@ export class BinanceService {
   }
 
   async makeQuery(params?: any): Promise<string> {
-    const timestamp = Date.now().toString();
+    const DTO = { ...params, timestamp: Date.now().toString() };
     return new URLSearchParams({
-      ...params,
-      timestamp,
+      ...DTO,
       signature: SignatureService.encryptBinanceData(
-        new URLSearchParams({ ...params, timestamp }).toString(),
+        new URLSearchParams(DTO).toString(),
         process.env.BINANCE_SECRET_KEY,
       ),
     }).toString();
   }
 
-  async makeRequest(path: string, params: string, method: string = 'POST', isFuture: boolean = false) {
-    const command = method === 'POST' ? 'post' : 'get';
+  async makeRequest(path: string, params: string, method: 'POST' | 'GET' = 'POST', isFuture: boolean = false): Promise<any> {
+    const command = method.toLowerCase()
     const url = isFuture ? process.env.BINANCE_FUTURE_URL : process.env.BINANCE_URL;
-    return await firstValueFrom(
-      this.httpService[command](
-        command === 'post' ? url + path : url + path + '?' + params,
-        command === 'post' ? params : { headers: SignatureService.createBinanceHeader() },
-        command === 'post' ? {
-          headers: SignatureService.createBinanceHeader()
-        } : undefined,
-      ),
-    )
+    try {
+      const res = await firstValueFrom(
+        this.httpService[command](
+          url + path + '?' + params,
+          null,
+          {
+            headers: SignatureService.createBinanceHeader()
+          },
+        ),
+      )
+      return res;
+    } catch (e) {
+      log(e)
+    }
+
   }
 }

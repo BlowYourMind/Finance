@@ -31,6 +31,11 @@ export class AppService {
     //   marketHigh: MarketType.BINANCE,
     //   marketLow: MarketType.OKEX,
     // });
+    this.krakenService.check('usdt').then((response: any) => {
+      if (response) {
+        this.krakenService.setKrakenBalanceToRedis(JSON.stringify(response));
+      }
+    });
   }
   async makeAction({
     marketHigh,
@@ -47,7 +52,7 @@ export class AppService {
       aproxStableValue,
     );
     // TODO: CHECK ASSET PRICE DELTA
-    
+
     // Get deposit network/method
     const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
       asset,

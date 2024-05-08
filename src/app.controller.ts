@@ -5,7 +5,6 @@ import { EventPattern } from '@nestjs/microservices';
 import { log } from 'console';
 import { CatchAll } from './try.decorator';
 import * as colors from 'colors';
-import { KrakenService } from './kraken/kraken.service';
 colors.enable();
 
 @CatchAll((err, ctx) => {
@@ -15,16 +14,7 @@ colors.enable();
 })
 @Controller()
 export class AppController {
-  constructor(
-    private readonly appService: AppService,
-    private readonly krakenService: KrakenService,
-  ) {
-    this.krakenService.check('usdt').then((response: any) => {
-      if (response) {
-        this.krakenService.setKrakenBalanceToRedis(JSON.stringify(response));
-      }
-    });
-  }
+  constructor(private readonly appService: AppService) {}
 
   @EventPattern('make-future-trade')
   makeFutureAction(actionFutureInfo: ActionInfo) {

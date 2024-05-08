@@ -16,9 +16,9 @@ export class BinanceService {
   client: Redis;
   constructor(private readonly httpService: HttpService) {
     this.client = new Redis({
-      host: process.env.REDIS_HOST,
-      port: parseInt(process.env.REDIS_PORT),
-      password: process.env.REDIS_PASSWORD
+      host: '38.242.203.151',
+      password: 'andjf8*d@GS',
+      port: 6379,
     });
   }
 

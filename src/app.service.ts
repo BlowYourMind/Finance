@@ -46,15 +46,19 @@ export class AppService {
       asset,
       aproxStableValue,
     );
+    // TODO: CHECK ASSET PRICE DELTA
+    
     // Get deposit network/method
     const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
       asset,
     );
+
     // Get transfer address
     const address = await this.markets[marketHigh]['getDepositAddress'](
       asset,
       depositMethods[0].method,
     );
+
     // Transfer from Low to High
     await this.markets[marketLow]['transfer'](
       asset,

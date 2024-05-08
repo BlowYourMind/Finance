@@ -8,17 +8,28 @@ import * as colors from "colors"
 import { BinanceUrls } from 'src/configs/urls';
 import { BinanceTransferTypes, BinanceMoveParameters, BinanceFutureActionParams } from 'src/dto/binance.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import Redis from 'ioredis';
 
 colors.enable();
 @Injectable()
 export class BinanceService {
-  constructor(
-    private readonly httpService: HttpService) {
+  client: Redis;
+  constructor(private readonly httpService: HttpService) {
+    this.client = new Redis({
+      host: '38.242.203.151',
+      password: 'andjf8*d@GS',
+      port: 6379,
+    });
   }
 
-  @Cron(CronExpression.EVERY_MINUTE)
-  async updageBlanace() {
-    log(await this.check());
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async updateBlanace() {
+    await this.client.set('balance-binance', JSON.stringify(await this.check()), 'EX', 10);
+  }
+
+  @Cron(CronExpression.EVERY_SECOND)
+  async test() {
+    console.log(await this.client.get('balance-binance'))
   }
 
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
@@ -27,6 +38,7 @@ export class BinanceService {
     await this.moveAssetsTo({ amount: (await this.checkFuture())['usdt'], asset: 'USDT', type: BinanceTransferTypes.UMFUTURE_MAIN });
     return res.data;
   }
+
 
   async buy(amount: string, asset: string) {
     const query = await this.makeQuery({ symbol: asset + 'USDT', side: 'BUY', type: 'MARKET', quantity: amount });

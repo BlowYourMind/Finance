@@ -9,6 +9,7 @@ import { CatchAll } from 'src/try.decorator';
 import { KrakenUrls } from 'src/configs/urls';
 import { KrakenWallets } from 'src/dto/kraken.dto';
 import Redis from 'ioredis';
+import { AdapterAbstract } from 'src/abstract/adapterAbstract';
 colors.enable();
 
 @CatchAll((err, ctx) => {
@@ -18,9 +19,10 @@ colors.enable();
   log(err);
 })
 @Injectable()
-export class KrakenService {
+export class KrakenService extends AdapterAbstract {
   client: Redis;
   constructor(private readonly httpService: HttpService) {
+    super();
     this.client = new Redis({
       host: '38.242.203.151',
       password: 'andjf8*d@GS',

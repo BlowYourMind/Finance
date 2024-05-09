@@ -24,6 +24,19 @@ export class AppService {
     private readonly cryptoService: CryptoService,
     private readonly okexService: OkexService,
   ) {
+    this.binanceService.check('usdt').then((response: any) => {
+      if (response) {
+        this.binanceService.setInitialBinanceBalanceToRedis(JSON.stringify(response));
+      }
+    });
+    this.binanceService.checkFuture('usdt').then((response: any) => {
+      if (response) {
+        this.binanceService.setInitialBinanceBalanceToRedis(
+          JSON.stringify(response),
+          'future',
+        );
+      }
+    });
     // this.makeAction({
     //   amountToBuy: '0.015',
     //   asset: 'ETH',
@@ -47,7 +60,7 @@ export class AppService {
       aproxStableValue,
     );
     // TODO: CHECK ASSET PRICE DELTA
-    
+
     // Get deposit network/method
     const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
       asset,

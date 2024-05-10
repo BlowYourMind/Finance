@@ -479,8 +479,11 @@ export class KrakenService extends AdapterAbstract {
         balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()],
     };
   }
-  async setKrakenBalanceToRedis(value: string): Promise<void> {
-    await this.client.set('krakenUSDT', value);
-    await this.client.expire('krakenUSDT', 300);
+  async initializeRedisBalance(value: string, type: string): Promise<void> {
+    const redisKey: string = `balance-kraken-${type}-${Object.keys(
+      JSON.parse(value),
+    )}`;
+    await this.client.set(redisKey, value);
+    await this.client.expire(redisKey, 300);
   }
 }

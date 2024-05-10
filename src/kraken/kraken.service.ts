@@ -479,9 +479,9 @@ export class KrakenService implements IAdapter {
     };
   }
   async initializeRedisBalance(value: string, type: string): Promise<void> {
-    const redisKey: string = `balance-kraken-${type}-${Object.keys(
-      JSON.parse(value),
-    )}`;
+    const redisKey: string = `balance-kraken-${type}-${
+      Object.keys(JSON.parse(value))[0]
+    }`;
     await this.client.set(redisKey, value);
     await this.client.expire(redisKey, 300);
   }

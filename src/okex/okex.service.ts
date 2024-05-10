@@ -8,7 +8,7 @@ import { SignatureService } from 'src/signature/signature.service';
 import * as colors from 'colors';
 import { CatchAll } from 'src/try.decorator';
 import { OkexUrls } from 'src/configs/urls';
-import { AdapterAbstract } from 'src/abstract/adapterAbstract';
+import { IAdapter } from 'src/interfaces/adapter.interface';
 colors.enable();
 
 enum OkexUlys {
@@ -24,10 +24,8 @@ enum OkexUlys {
   log(err);
 })
 @Injectable()
-export class OkexService extends AdapterAbstract {
-  constructor(private readonly httpService: HttpService) {
-    super();
-  }
+export class OkexService implements IAdapter {
+  constructor(private readonly httpService: HttpService) {}
 
   async sign(
     path: string,

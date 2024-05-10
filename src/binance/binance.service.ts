@@ -13,14 +13,13 @@ import {
 } from 'src/dto/binance.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import Redis from 'ioredis';
-import { AdapterAbstract } from 'src/abstract/adapterAbstract';
+import { IAdapter } from 'src/interfaces/adapter.interface';
 
 colors.enable();
 @Injectable()
-export class BinanceService extends AdapterAbstract {
+export class BinanceService implements IAdapter {
   client: Redis;
   constructor(private readonly httpService: HttpService) {
-    super();
     this.client = new Redis({
       host: '38.242.203.151',
       password: 'andjf8*d@GS',

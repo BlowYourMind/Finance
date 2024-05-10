@@ -46,7 +46,7 @@ export class BinanceService {
     value: string,
     type: string = 'spot',
   ): Promise<void> {
-    const redisKey = `balance-binance-${type}-${Object.keys(JSON.parse(value))}`;
+    const redisKey = `balance-binance-${type}-${Object.keys(JSON.parse(value))[0]}`;
 
     await this.client.set(redisKey, value);
     await this.client.expire(redisKey, 300);

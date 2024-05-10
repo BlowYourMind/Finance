@@ -8,6 +8,7 @@ import { log } from 'console';
 import { CatchAll } from './try.decorator';
 import * as colors from 'colors';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { response } from 'express';
 colors.enable();
 
 @Injectable()
@@ -39,6 +40,11 @@ export class AppService {
         );
       }
     });
+    // this.okexService.check('usdt').then((response: any) => {
+    //   if (response) {
+    //     console.log(response);
+    //   }
+    // });
   }
   async makeAction({
     marketHigh,

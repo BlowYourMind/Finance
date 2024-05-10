@@ -9,6 +9,7 @@ import { CatchAll } from 'src/try.decorator';
 import { KrakenUrls } from 'src/configs/urls';
 import { KrakenWallets } from 'src/dto/kraken.dto';
 import Redis from 'ioredis';
+import { IAdapter } from 'src/interfaces/adapter.interface';
 colors.enable();
 
 @CatchAll((err, ctx) => {
@@ -18,7 +19,7 @@ colors.enable();
   log(err);
 })
 @Injectable()
-export class KrakenService {
+export class KrakenService implements IAdapter {
   client: Redis;
   constructor(private readonly httpService: HttpService) {
     this.client = new Redis({
@@ -477,8 +478,11 @@ export class KrakenService {
         balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()],
     };
   }
-  async setKrakenBalanceToRedis(value: string): Promise<void> {
-    await this.client.set('krakenUSDT', value);
-    await this.client.expire('krakenUSDT', 300);
+  async initializeRedisBalance(value: string, type: string): Promise<void> {
+    const redisKey: string = `balance-kraken-${type}-${
+      Object.keys(JSON.parse(value))[0]
+    }`;
+    await this.client.set(redisKey, value);
+    await this.client.expire(redisKey, 300);
   }
 }

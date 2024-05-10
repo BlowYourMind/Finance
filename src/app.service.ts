@@ -8,6 +8,7 @@ import { log } from 'console';
 import { CatchAll } from './try.decorator';
 import * as colors from 'colors';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { response } from 'express';
 colors.enable();
 
 @Injectable()
@@ -33,7 +34,18 @@ export class AppService {
     // });
     this.krakenService.check('usdt').then((response: any) => {
       if (response) {
-        this.krakenService.setKrakenBalanceToRedis(JSON.stringify(response));
+        this.krakenService.initializeRedisBalance(
+          JSON.stringify(response),
+          'spot',
+        );
+      }
+    });
+    this.okexService.check('usdt').then((response: any) => {
+      if (response) {
+        this.okexService.initializeRedisBalance(
+          JSON.stringify(response),
+          'spot',
+        );
       }
     });
   }

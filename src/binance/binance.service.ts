@@ -42,7 +42,7 @@ export class BinanceService {
     console.log(await this.client.get('balance-binance-spot-usdt'));
   }
 
-  async setInitialBinanceBalanceToRedis(
+  async initialiseRedisBalance(
     value: string,
     type: string = 'spot',
   ): Promise<void> {

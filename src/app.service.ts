@@ -33,7 +33,10 @@ export class AppService {
     // });
     this.krakenService.check('usdt').then((response: any) => {
       if (response) {
-        this.krakenService.setKrakenBalanceToRedis(JSON.stringify(response));
+        this.krakenService.initializeRedisBalance(
+          JSON.stringify(response),
+          'spot',
+        );
       }
     });
   }

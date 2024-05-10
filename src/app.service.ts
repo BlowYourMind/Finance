@@ -26,7 +26,7 @@ export class AppService {
   ) {
     this.binanceService.check('usdt').then((response: any) => {
       if (response) {
-        this.binanceService.setInitialBinanceBalanceToRedis(JSON.stringify(response));
+        this.binanceService.initialiseRedisBalance(JSON.stringify(response));
       }
     });
     this.binanceService.checkFuture('usdt').then((response: any) => {

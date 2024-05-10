@@ -40,11 +40,14 @@ export class AppService {
         );
       }
     });
-    // this.okexService.check('usdt').then((response: any) => {
-    //   if (response) {
-    //     console.log(response);
-    //   }
-    // });
+    this.okexService.check('usdt').then((response: any) => {
+      if (response) {
+        this.okexService.initializeRedisBalance(
+          JSON.stringify(response),
+          'spot',
+        );
+      }
+    });
   }
   async makeAction({
     marketHigh,

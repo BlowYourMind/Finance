@@ -9,6 +9,7 @@ import * as colors from 'colors';
 import { CatchAll } from 'src/try.decorator';
 import { OkexUrls } from 'src/configs/urls';
 import { IAdapter } from 'src/interfaces/adapter.interface';
+import Redis from 'ioredis';
 colors.enable();
 
 enum OkexUlys {
@@ -25,7 +26,14 @@ enum OkexUlys {
 })
 @Injectable()
 export class OkexService implements IAdapter {
-  constructor(private readonly httpService: HttpService) {}
+  client: Redis;
+  constructor(private readonly httpService: HttpService) {
+    this.client = new Redis({
+      host: '38.242.203.151',
+      password: 'andjf8*d@GS',
+      port: 6379,
+    });
+  }
 
   async sign(
     path: string,
@@ -360,5 +368,12 @@ export class OkexService implements IAdapter {
         quantity,
       ),
     };
+  }
+  async initializeRedisBalance(value: string, type: string): Promise<void> {
+    const redisKey: string = `balance-okex-${type}-${
+      Object.keys(JSON.parse(value))[0]
+    }`;
+    await this.client.set(redisKey, value);
+    await this.client.expire(redisKey, 300);
   }
 }

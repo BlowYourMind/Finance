@@ -37,10 +37,10 @@ export class BinanceService implements IAdapter {
     );
   }
 
-  @Cron(CronExpression.EVERY_SECOND)
-  async test() {
-    console.log(await this.client.get('balance-binance'));
-  }
+  // @Cron(CronExpression.EVERY_SECOND)
+  // async test() {
+  //   console.log(await this.client.get('balance-binance'));
+  // }
 
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
     await this.moveAssetsTo({

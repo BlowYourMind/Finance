@@ -32,11 +32,27 @@ export class AppService {
     //   marketHigh: MarketType.BINANCE,
     //   marketLow: MarketType.OKEX,
     // });
+    this.krakenService.getFutureBalance().then((response: any) => {
+      if (response) {
+        this.krakenService.initializeRedisBalance(
+          JSON.stringify({ usdt: String(response) }),
+          'future',
+        );
+      }
+    });
     this.krakenService.check('usdt').then((response: any) => {
       if (response) {
         this.krakenService.initializeRedisBalance(
           JSON.stringify(response),
           'spot',
+        );
+      }
+    });
+    this.okexService.getFutureBalance('USDT').then((response: any) => {
+      if (response) {
+        this.okexService.initializeRedisBalance(
+          JSON.stringify(response),
+          'future',
         );
       }
     });

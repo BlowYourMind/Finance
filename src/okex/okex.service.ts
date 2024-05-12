@@ -350,6 +350,26 @@ export class OkexService implements IAdapter {
         : '0',
     };
   }
+
+  async getFutureBalance(asset?: string): Promise<BalanceInfo> {
+    const nonce = new Date().toISOString();
+    const params = asset
+      ? '?' + new URLSearchParams({ ccy: asset }).toString()
+      : '';
+    const path = OkexUrls.TRADE_BALANCE + params;
+    const signature = await this.sign(path, undefined, nonce, 'GET');
+    const balance = (
+      await this.waitForValue(path, undefined, signature, nonce, 'GET')
+    ).data.data[0];
+    // availEq | String | Available equity of currency, The balance that can be used on margin or futures/swap trading, Applicable to Single-currency margin/Multi-currency margin/Portfolio margin
+    // https://www.okx.com/docs-v5/en/#trading-account-rest-api-get-balance
+    return {
+      [asset ? asset.toLowerCase() : 'usdt']: balance.details[0].availEq
+        ? balance.details[0].availEq
+        : '0',
+    };
+  }
+
   async makeFutureParams(
     instId: string,
     quantity: string,

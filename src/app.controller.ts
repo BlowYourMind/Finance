@@ -14,8 +14,7 @@ colors.enable();
 })
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {
-  }
+  constructor(private readonly appService: AppService) {}
 
   @EventPattern('make-future-trade')
   makeFutureAction(actionFutureInfo: ActionInfo) {

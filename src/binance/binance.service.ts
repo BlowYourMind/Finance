@@ -37,10 +37,24 @@ export class BinanceService implements IAdapter {
     );
   }
 
-  // @Cron(CronExpression.EVERY_SECOND)
-  // async test() {
-  //   console.log(await this.client.get('balance-binance'));
-  // }
+  @Cron(CronExpression.EVERY_SECOND)
+  async test() {
+    // console.log(await this.client.get('balance-binance'));
+    // console.log(await this.client.get('balance-binance-future-usdt'));
+    // console.log(await this.client.get('balance-binance-spot-usdt'));
+  }
+
+  async initialiseRedisBalance(
+    value: string,
+    type: string = 'spot',
+  ): Promise<void> {
+    const redisKey = `balance-binance-${type}-${
+      Object.keys(JSON.parse(value))[0]
+    }`;
+
+    await this.client.set(redisKey, value);
+    await this.client.expire(redisKey, 300);
+  }
 
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
     await this.moveAssetsTo({
@@ -128,7 +142,7 @@ export class BinanceService implements IAdapter {
       await this.makeQuery({ asset }),
       'POST',
     );
-    return { [asset.toLowerCase()]: res.data[0] ? res.data[0].free : 0 };
+    return { [asset.toLowerCase()]: res?.data[0] ? res?.data[0]?.free : 0 };
   }
 
   async checkAll(): Promise<BalanceInfo> {
@@ -199,7 +213,10 @@ export class BinanceService implements IAdapter {
   }
 
   async makeQuery(params?: any): Promise<string> {
-    const DTO = { ...params, timestamp: Date.now().toString() };
+    const DTO = {
+      ...params,
+      timestamp: Date.now().toString(),
+    };
     return new URLSearchParams({
       ...DTO,
       signature: SignatureService.encryptBinanceData(
@@ -220,11 +237,17 @@ export class BinanceService implements IAdapter {
       ? process.env.BINANCE_FUTURE_URL
       : process.env.BINANCE_URL;
     try {
-      const res = await firstValueFrom(
-        this.httpService[command](url + path + '?' + params, null, {
-          headers: SignatureService.createBinanceHeader(),
-        }),
-      );
+      const res = isFuture
+        ? await firstValueFrom(
+            this.httpService[command](url + path + '?' + params, {
+              headers: SignatureService.createBinanceHeader(),
+            }),
+          )
+        : await firstValueFrom(
+            this.httpService[command](url + path + '?' + params, null, {
+              headers: SignatureService.createBinanceHeader(),
+            }),
+          );
       return res;
     } catch (e) {
       log(e);

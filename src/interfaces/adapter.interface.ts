@@ -15,7 +15,8 @@ export interface IAdapter {
   getDepositAddress(
     asset: string,
     method: string,
-    isNew: boolean,
+    isNew?: boolean,
   ): Promise<any>;
+  checkFuture(asset?: string): Promise<BalanceInfo> | never;
   getDepositMethods(asset: string): Promise<any>;
 }

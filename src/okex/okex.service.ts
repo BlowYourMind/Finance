@@ -9,7 +9,6 @@ import * as colors from 'colors';
 import { CatchAll } from 'src/try.decorator';
 import { OkexUrls } from 'src/configs/urls';
 import { IAdapter } from 'src/interfaces/adapter.interface';
-import Redis from 'ioredis';
 colors.enable();
 
 enum OkexUlys {
@@ -26,14 +25,7 @@ enum OkexUlys {
 })
 @Injectable()
 export class OkexService implements IAdapter {
-  client: Redis;
-  constructor(private readonly httpService: HttpService) {
-    this.client = new Redis({
-      host: '38.242.203.151',
-      password: 'andjf8*d@GS',
-      port: 6379,
-    });
-  }
+  constructor(private readonly httpService: HttpService) {}
 
   async sign(
     path: string,
@@ -351,10 +343,10 @@ export class OkexService implements IAdapter {
     };
   }
 
-  async getFutureBalance(asset?: string): Promise<BalanceInfo> {
+  async checkFuture(asset?: string): Promise<BalanceInfo> {
     const nonce = new Date().toISOString();
     const params = asset
-      ? '?' + new URLSearchParams({ ccy: asset }).toString()
+      ? '?' + new URLSearchParams({ ccy: asset.toUpperCase() }).toString()
       : '';
     const path = OkexUrls.TRADE_BALANCE + params;
     const signature = await this.sign(path, undefined, nonce, 'GET');
@@ -388,12 +380,5 @@ export class OkexService implements IAdapter {
         quantity,
       ),
     };
-  }
-  async initializeRedisBalance(value: string, type: string): Promise<void> {
-    const redisKey: string = `balance-okex-${type}-${
-      Object.keys(JSON.parse(value))[0]
-    }`;
-    await this.client.set(redisKey, value);
-    await this.client.expire(redisKey, 300);
   }
 }

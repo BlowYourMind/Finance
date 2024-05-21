@@ -44,18 +44,6 @@ export class BinanceService implements IAdapter {
     // console.log(await this.client.get('balance-binance-spot-usdt'));
   }
 
-  async initialiseRedisBalance(
-    value: string,
-    type: string = 'spot',
-  ): Promise<void> {
-    const redisKey = `balance-binance-${type}-${
-      Object.keys(JSON.parse(value))[0]
-    }`;
-
-    await this.client.set(redisKey, value);
-    await this.client.expire(redisKey, 300);
-  }
-
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
     await this.moveAssetsTo({
       amount: approxStableValue,
@@ -232,17 +220,22 @@ export class BinanceService implements IAdapter {
     method: 'POST' | 'GET' = 'POST',
     isFuture: boolean = false,
   ): Promise<any> {
-    const baseUrl = isFuture
+    const command = method.toLowerCase();
+    const url = isFuture
       ? process.env.BINANCE_FUTURE_URL
       : process.env.BINANCE_URL;
-    const url = `${baseUrl}${path}?${params}`;
-    const headers = { headers: SignatureService.createBinanceHeader() };
     try {
-      const res = await firstValueFrom(
-        method === 'POST'
-          ? this.httpService.post(url, null, headers)
-          : this.httpService.get(url, headers),
-      );
+      const res = isFuture
+        ? await firstValueFrom(
+            this.httpService[command](url + path + '?' + params, {
+              headers: SignatureService.createBinanceHeader(),
+            }),
+          )
+        : await firstValueFrom(
+            this.httpService[command](url + path + '?' + params, null, {
+              headers: SignatureService.createBinanceHeader(),
+            }),
+          );
       return res;
     } catch (e) {
       log(e);

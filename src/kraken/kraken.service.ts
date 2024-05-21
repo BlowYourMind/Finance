@@ -8,7 +8,6 @@ import * as colors from 'colors';
 import { CatchAll } from 'src/try.decorator';
 import { KrakenUrls } from 'src/configs/urls';
 import { KrakenWallets } from 'src/dto/kraken.dto';
-import Redis from 'ioredis';
 import { IAdapter } from 'src/interfaces/adapter.interface';
 colors.enable();
 
@@ -20,14 +19,7 @@ colors.enable();
 })
 @Injectable()
 export class KrakenService implements IAdapter {
-  client: Redis;
-  constructor(private readonly httpService: HttpService) {
-    this.client = new Redis({
-      host: '38.242.203.151',
-      password: 'andjf8*d@GS',
-      port: 6379,
-    });
-  }
+  constructor(private readonly httpService: HttpService) {}
 
   // add websocket to know when there is account wallet update
   async WSGetBalance() {
@@ -290,7 +282,7 @@ export class KrakenService implements IAdapter {
     return response.data.result;
   }
 
-  async getFutureBalance() {
+  async checkFuture(asset?: string): Promise<BalanceInfo> {
     const nonce = Date.now();
     const postData = new URLSearchParams({
       nonce: nonce.toString(),
@@ -309,7 +301,11 @@ export class KrakenService implements IAdapter {
       true,
       'GET',
     );
-    return response.data.accounts.flex.currencies.USD.quantity;
+    return {
+      [asset ? asset.toLowerCase() : 'usdt']: String(
+        response.data.accounts.flex.currencies.USD.quantity,
+      ),
+    };
   }
 
   async delay(ms: number) {
@@ -477,12 +473,5 @@ export class KrakenService implements IAdapter {
       [asset.toLowerCase()]:
         balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()],
     };
-  }
-  async initializeRedisBalance(value: string, type: string): Promise<void> {
-    const redisKey: string = `balance-kraken-${type}-${
-      Object.keys(JSON.parse(value))[0]
-    }`;
-    await this.client.set(redisKey, value);
-    await this.client.expire(redisKey, 300);
   }
 }

@@ -5,7 +5,7 @@ import { ActionInfo } from './dto/makeTrade.dto';
 import { KrakenService } from './kraken/kraken.service';
 import { OkexService } from './okex/okex.service';
 import * as colors from 'colors';
-import Redis from 'ioredis';
+import { redisInstance } from './redis/redis.service';
 colors.enable();
 
 @Injectable()
@@ -16,18 +16,12 @@ export class AppService {
     crypto: this.cryptoService,
     okex: this.okexService,
   };
-  client: Redis;
   constructor(
     private readonly binanceService: BinanceService,
     private readonly krakenService: KrakenService,
     private readonly cryptoService: CryptoService,
     private readonly okexService: OkexService,
   ) {
-    this.client = new Redis({
-      host: '38.242.203.151',
-      password: 'andjf8*d@GS',
-      port: 6379,
-    });
     for (let market in this.markets) {
       if (market === 'crypto') {
         continue;
@@ -89,11 +83,7 @@ export class AppService {
     await this.markets[market][method](asset).then((response: any) => {
       if (response) {
         const asset = Object.keys(response)[0];
-        this.initialiseRedisBalance(
-          JSON.stringify(JSON.stringify(asset)),
-          type,
-          market,
-        );
+        this.initialiseRedisBalance(asset, type, market, 'balance');
       }
     });
   }
@@ -101,12 +91,8 @@ export class AppService {
     asset: string,
     balanceType: string,
     marketName: string,
+    key: string,
   ): Promise<void> {
-    const redisKey = `balance-${marketName}-${balanceType}-${asset}`;
-    if (await this.client.get(redisKey)) {
-      await this.client.del(redisKey);
-    }
-    await this.client.set(redisKey, asset);
-    await this.client.expire(redisKey, 300);
+    await redisInstance.set({ key, marketName, balanceType, asset }, 300);
   }
 }

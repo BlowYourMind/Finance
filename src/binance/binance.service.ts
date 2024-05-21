@@ -232,22 +232,17 @@ export class BinanceService implements IAdapter {
     method: 'POST' | 'GET' = 'POST',
     isFuture: boolean = false,
   ): Promise<any> {
-    const command = method.toLowerCase();
-    const url = isFuture
+    const baseUrl = isFuture
       ? process.env.BINANCE_FUTURE_URL
       : process.env.BINANCE_URL;
+    const url = `${baseUrl}${path}?${params}`;
+    const headers = { headers: SignatureService.createBinanceHeader() };
     try {
-      const res = isFuture
-        ? await firstValueFrom(
-            this.httpService[command](url + path + '?' + params, {
-              headers: SignatureService.createBinanceHeader(),
-            }),
-          )
-        : await firstValueFrom(
-            this.httpService[command](url + path + '?' + params, null, {
-              headers: SignatureService.createBinanceHeader(),
-            }),
-          );
+      const res = await firstValueFrom(
+        method === 'POST'
+          ? this.httpService.post(url, null, headers)
+          : this.httpService.get(url, headers),
+      );
       return res;
     } catch (e) {
       log(e);

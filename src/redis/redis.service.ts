@@ -23,14 +23,9 @@ class RedisService {
   }
   async set(data: RedisSetData, expire: number): Promise<void> {
     const redisKey = `${data.key}-${data.marketName}-${data.balanceType}-${data.asset}`;
-    await this.update(redisKey);
+    await this.redisClient.del(redisKey);
     await this.redisClient.set(redisKey, data.asset);
     await this.redisClient.expire(redisKey, expire);
-  }
-  async update(key: string): Promise<void> {
-    if (await this.get(key)) {
-      await this.redisClient.del(key);
-    }
   }
 }
 

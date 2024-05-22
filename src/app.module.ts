@@ -20,11 +20,7 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
 ];
 
 @Module({
-  imports: [
-    HttpModule,
-    ConfigModule.forRoot(),
-    ScheduleModule.forRoot(),
-  ],
+  imports: [HttpModule, ConfigModule.forRoot(), ScheduleModule.forRoot()],
   controllers: [AppController],
   providers: [
     AppService,

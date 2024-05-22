@@ -12,37 +12,29 @@ import {
   BinanceFutureActionParams,
 } from 'src/dto/binance.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
-import Redis from 'ioredis';
 import { IAdapter } from 'src/interfaces/adapter.interface';
+import { redisInstance } from 'src/redis/redis.service';
 
 colors.enable();
 @Injectable()
 export class BinanceService implements IAdapter {
-  client: Redis;
-  constructor(private readonly httpService: HttpService) {
-    this.client = new Redis({
-      host: '38.242.203.151',
-      password: 'andjf8*d@GS',
-      port: 6379,
-    });
-  }
+  constructor(private readonly httpService: HttpService) {}
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateBlanace() {
-    await this.client.set(
-      'balance-binance',
-      JSON.stringify(await this.check()),
-      'EX',
+    await redisInstance.set(
+      {
+        key: 'balance',
+        marketName: 'binance',
+        balanceType: 'spot',
+        asset: Object.keys(await this.check())[0],
+      },
       10,
     );
   }
 
   @Cron(CronExpression.EVERY_SECOND)
-  async test() {
-    // console.log(await this.client.get('balance-binance'));
-    // console.log(await this.client.get('balance-binance-future-usdt'));
-    // console.log(await this.client.get('balance-binance-spot-usdt'));
-  }
+  async test() {}
 
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
     await this.moveAssetsTo({

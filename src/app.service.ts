@@ -54,7 +54,7 @@ export class AppService {
           try {
             const response = await this.markets[marketLow]['buy'](
               balance,
-              'ETH',
+              asset,
             );
             const currentBalance: number =
               balance - Number(response?.cummulativeQuoteQty);

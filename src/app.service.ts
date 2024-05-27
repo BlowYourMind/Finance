@@ -7,7 +7,6 @@ import { OkexService } from './okex/okex.service';
 import * as colors from 'colors';
 import { redisInstance } from './redis/redis.service';
 import { MarketType } from './dto/marketType.dto';
-import { response } from 'express';
 colors.enable();
 
 @Injectable()
@@ -16,6 +15,7 @@ export class AppService {
     binance: this.binanceService,
     kraken: this.krakenService,
     crypto: this.cryptoService,
+    okex: this.okexService,
   };
   constructor(
     private readonly binanceService: BinanceService,

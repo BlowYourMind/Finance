@@ -45,36 +45,36 @@ export class AppService {
     asset,
     aproxStableValue,
   }: ActionInfo) {
-    await redisInstance
-      .get(`balance-${marketLow}-spot-usdt`)
-      .then(async (balance: string | number) => {
-        balance = Number(balance);
+    const balance: number | string = await redisInstance.get(
+      `balance-${marketLow}-spot-usdt`,
+    );
 
-        if (balance > 90) {
-          try {
-            const response = await this.markets[marketLow]['buy'](
-              balance,
-              asset,
-            );
-            const currentBalance: number =
-              balance - Number(response?.cummulativeQuoteQty);
-            await redisInstance.set(
-              {
-                asset: 'usdt',
-                key: 'balance',
-                marketName: marketLow,
-                balanceType: 'spot',
-                value: currentBalance,
-              },
-              300,
-            );
+    const numbericBalance = Number(balance);
+    if (numbericBalance <= 90) return;
 
-            console.log('success---', response);
-          } catch (error) {
-            console.error('Error---', error);
-          }
-        }
-      });
+    try {
+      const response = await this.markets[marketLow]['buy'](
+        balance,
+        asset,
+        aproxStableValue,
+      );
+      const currentBalance: number =
+        numbericBalance - Number(response?.cummulativeQuoteQty);
+      await redisInstance.set(
+        {
+          asset: 'usdt',
+          key: 'balance',
+          marketName: marketLow,
+          balanceType: 'spot',
+          value: currentBalance,
+        },
+        300,
+      );
+
+      console.log('success---', response);
+    } catch (error) {
+      console.error('Error---', error);
+    }
 
     // // Buy Low and Future Lock High
     // await this.markets[marketLow]['buy'](amountToBuy, asset, aproxStableValue);

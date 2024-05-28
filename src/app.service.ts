@@ -5,7 +5,8 @@ import { ActionInfo } from './dto/makeTrade.dto';
 import { KrakenService } from './kraken/kraken.service';
 import { OkexService } from './okex/okex.service';
 import * as colors from 'colors';
-import { redisInstance } from './redis/redis.service';
+import { ActionType, redisInstance } from './redis/redis.service';
+import { log } from 'console';
 colors.enable();
 
 @Injectable()
@@ -30,11 +31,11 @@ export class AppService {
       this.getMarketsBalance(market, 'checkFuture', 'future');
     }
     // this.makeAction({
-    //   amountToBuy: '0.015',
+    //   amountToBuy: '0.002',
     //   asset: 'ETH',
     //   aproxStableValue: '16',
-    //   marketHigh: MarketType.BINANCE,
-    //   marketLow: MarketType.OKEX,
+    //   marketHigh: MarketType.OKEX,
+    //   marketLow: MarketType.KRAKEN,
     // });
   }
   async makeAction({
@@ -45,7 +46,41 @@ export class AppService {
     aproxStableValue,
   }: ActionInfo) {
     // Buy Low and Future Lock High
-    await this.markets[marketLow]['buy'](amountToBuy, asset, aproxStableValue);
+    try {
+      const redisBalance = await redisInstance.get(
+        redisInstance.generateRedisKey({
+          key: 'balance',
+          marketName: marketLow,
+          balanceType: 'spot',
+          asset: 'usdt',
+        }),
+      );
+      if (Number(redisBalance) > 100) {
+        const result = await this.markets[marketLow]['buy'](
+          amountToBuy,
+          asset,
+          aproxStableValue,
+        );
+        if (marketLow === 'kraken') {
+          await this.setTransactionRedis({
+            transactionId: result?.txid,
+            market: marketLow,
+            amountToBuy,
+            price: result?.result?.price,
+            asset,
+            status: result?.result?.status,
+            type: ActionType.SPOT_BUY,
+            balanceType: 'spot',
+            balance:
+              Number(redisBalance) -
+              (Number(result?.result?.cost) + Number(result?.result?.fee)),
+          });
+        }
+      }
+    } catch (error) {
+      log(error);
+    }
+
     await this.markets[marketHigh]['futureBuy'](
       amountToBuy,
       asset,
@@ -83,7 +118,13 @@ export class AppService {
     await this.markets[market][method](asset).then((response: any) => {
       if (response) {
         const asset = Object.keys(response)[0];
-        this.initialiseRedisBalance(asset, type, market, 'balance');
+        this.initialiseRedisBalance(
+          asset,
+          type,
+          market,
+          'balance',
+          response[asset],
+        );
       }
     });
   }
@@ -92,7 +133,53 @@ export class AppService {
     balanceType: string,
     marketName: string,
     key: string,
+    balance: string,
   ): Promise<void> {
-    await redisInstance.set({ key, marketName, balanceType, asset }, 300);
+    await redisInstance.set(
+      { key, marketName, balanceType, asset, balance },
+      300,
+    );
+  }
+  async setTransactionRedis({
+    transactionId,
+    market,
+    amountToBuy,
+    price,
+    asset,
+    status,
+    type,
+    balanceType,
+    balance,
+  }): Promise<void> {
+    await redisInstance.set(
+      {
+        key: 'action',
+        transactionId,
+        response: {
+          [market]: [
+            {
+              externalTransactionId: transactionId,
+              amount: Number(amountToBuy),
+              assetPrice: Number(price),
+              assetName: asset,
+              date: new Date(),
+              status,
+              type,
+            },
+          ],
+        },
+      },
+      300,
+    );
+    await redisInstance.set(
+      {
+        key: 'balance',
+        marketName: market,
+        balanceType,
+        asset: 'usdt',
+        balance,
+      },
+      300,
+    );
   }
 }

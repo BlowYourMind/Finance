@@ -22,12 +22,14 @@ export class BinanceService implements IAdapter {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async updateBlanace() {
+    const asset = await this.check()[0];
     await redisInstance.set(
       {
         key: 'balance',
         marketName: 'binance',
         balanceType: 'spot',
-        asset: Object.keys(await this.check())[0],
+        asset: asset,
+        balance: await this.check()[asset],
       },
       10,
     );

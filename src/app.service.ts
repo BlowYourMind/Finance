@@ -74,7 +74,7 @@ export class AppService {
             status: result?.result?.status,
             type: ActionType.SPOT_BUY,
             balanceType: 'spot',
-            balance:
+            value:
               Number(redisBalance) -
               (Number(result?.result?.cost) + Number(result?.result?.fee)),
           });
@@ -180,7 +180,7 @@ export class AppService {
     status,
     type,
     balanceType,
-    balance,
+    value,
   }): Promise<void> {
     await redisInstance.set(
       {
@@ -210,7 +210,7 @@ export class AppService {
         marketName: market,
         balanceType,
         asset: 'usdt',
-        value: balance,
+        value,
       },
       300,
     );

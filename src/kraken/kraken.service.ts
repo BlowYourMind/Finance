@@ -57,7 +57,7 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
-    return response.data.result.limit;
+    return response?.data?.result?.limit;
   }
   async transfer(asset: string, amount: string, address: string) {
     const limit = await this.withdrawInfo(asset, amount, address);
@@ -314,7 +314,7 @@ export class KrakenService implements IAdapter {
 
   async waitUntilOrderIsClosed(txid: string) {
     let order = await this.getOrder(txid);
-    while (order.result[txid].status !== 'closed') {
+    while (order?.result?.[txid].status !== 'closed') {
       await this.delay(1000);
       order = await this.getOrder(txid);
     }
@@ -380,7 +380,7 @@ export class KrakenService implements IAdapter {
   }
 
   async getOrder(txid: string) {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       nonce: nonce.toString(),
       txid: txid,
@@ -396,7 +396,7 @@ export class KrakenService implements IAdapter {
   }
 
   async buy(amount: string, asset: string) {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       nonce: nonce.toString(),
       ordertype: 'market',
@@ -414,7 +414,7 @@ export class KrakenService implements IAdapter {
     log(res.data);
     const txid = res.data.result.txid[0];
     const order = await this.waitUntilOrderIsClosed(txid);
-    return { result: order.result[txid], txid };
+    return { result: order?.result?.[txid], txid };
   }
 
   async sell(amount: string, asset: string): Promise<BalanceInfo> {
@@ -460,7 +460,7 @@ export class KrakenService implements IAdapter {
   }
 
   async check(asset: string): Promise<BalanceInfo> {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({ nonce: nonce.toString() });
     const signature = await this.sign(KrakenUrls.BALANCE, postData, nonce);
     const balance = await this.waitForValue(
@@ -469,6 +469,7 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
+    console.log(balance);
     return {
       [asset.toLowerCase()]:
         balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()],

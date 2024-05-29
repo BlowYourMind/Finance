@@ -5,7 +5,8 @@ import { ActionInfo } from './dto/makeTrade.dto';
 import { KrakenService } from './kraken/kraken.service';
 import { OkexService } from './okex/okex.service';
 import * as colors from 'colors';
-import { redisInstance } from './redis/redis.service';
+import { ActionType, redisInstance } from './redis/redis.service';
+import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
 colors.enable();
 
@@ -30,51 +31,84 @@ export class AppService {
       this.getMarketsBalance(market, 'check', 'spot');
       this.getMarketsBalance(market, 'checkFuture', 'future');
     }
-    setTimeout(() => {
-      this.makeAction({
-        asset: 'ETH',
-        aproxStableValue: '16',
-        marketHigh: MarketType.BINANCE,
-        marketLow: MarketType.BINANCE,
-      });
-    }, 500);
+
+    // setTimeout(() => {
+    //   this.makeAction({
+    //     asset: 'ETH',
+    //     aproxStableValue: '16',
+    //     marketHigh: MarketType.BINANCE,
+    //     marketLow: MarketType.BINANCE,
+    //   });
+    // }, 500);
   }
   async makeAction({
+    amountToBuy,
     marketHigh,
     marketLow,
     asset,
     aproxStableValue,
   }: ActionInfo) {
-    const balance: number | string = await redisInstance.get(
-      `balance-${marketLow}-spot-usdt`,
-    );
-
-    const numbericBalance = Number(balance);
-    if (numbericBalance <= 90) return;
-
+    // Buy Low and Future Lock High
     try {
-      const response = await this.markets[marketLow]['buy'](
-        balance,
-        asset,
-        aproxStableValue,
-      );
-      const currentBalance: number =
-        numbericBalance - Number(response?.cummulativeQuoteQty);
-      await redisInstance.set(
-        {
-          asset: 'usdt',
+      const redisBalance = await redisInstance.get(
+        redisInstance.generateRedisKey({
           key: 'balance',
           marketName: marketLow,
           balanceType: 'spot',
-          value: currentBalance,
-        },
-        300,
+          asset: 'usdt',
+        }),
       );
-
-      console.log('success---', response);
+      if (Number(redisBalance) > 100) {
+        const result = await this.markets[marketLow]['buy'](
+          amountToBuy,
+          asset,
+          aproxStableValue,
+        );
+        if (marketLow === 'kraken') {
+          await this.setTransactionRedis({
+            transactionId: result?.txid,
+            market: marketLow,
+            amountToBuy,
+            price: result?.result?.price,
+            asset,
+            status: result?.result?.status,
+            type: ActionType.SPOT_BUY,
+            balanceType: 'spot',
+            value:
+              Number(redisBalance) -
+              (Number(result?.result?.cost) + Number(result?.result?.fee)),
+          });
+        }
+        if (marketLow === 'binance') {
+          const currentBalance: number =
+            Number(redisBalance) - Number(result?.cummulativeQuoteQty);
+          await redisInstance.set(
+            {
+              asset: 'usdt',
+              key: 'balance',
+              marketName: marketLow,
+              balanceType: 'spot',
+              value: currentBalance,
+            },
+            300,
+          );
+        }
+      }
     } catch (error) {
-      console.error('Error---', error);
+      log(error);
     }
+
+    await this.markets[marketHigh]['futureBuy'](
+      amountToBuy,
+      asset,
+      aproxStableValue,
+    );
+    // TODO: CHECK ASSET PRICE DELTA
+
+    // Get deposit network/method
+    const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
+      asset,
+    );
 
     // // Buy Low and Future Lock High
     // await this.markets[marketLow]['buy'](amountToBuy, asset, aproxStableValue);
@@ -130,10 +164,54 @@ export class AppService {
     balanceType: string,
     marketName: string,
     key: string,
-    value: number,
+    value: string,
   ): Promise<void> {
     await redisInstance.set(
       { key, marketName, balanceType, asset, value },
+      300,
+    );
+  }
+  async setTransactionRedis({
+    transactionId,
+    market,
+    amountToBuy,
+    price,
+    asset,
+    status,
+    type,
+    balanceType,
+    value,
+  }): Promise<void> {
+    await redisInstance.set(
+      {
+        key: 'action',
+        transactionId,
+        value: {
+          response: {
+            [market]: [
+              {
+                externalTransactionId: transactionId,
+                amount: Number(amountToBuy),
+                assetPrice: Number(price),
+                assetName: asset,
+                date: new Date(),
+                status,
+                type,
+              },
+            ],
+          },
+        },
+      },
+      300,
+    );
+    await redisInstance.set(
+      {
+        key: 'balance',
+        marketName: market,
+        balanceType,
+        asset: 'usdt',
+        value,
+      },
       300,
     );
   }

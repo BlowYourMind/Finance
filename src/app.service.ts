@@ -61,7 +61,6 @@ export class AppService {
           asset: 'usdt',
         }),
       );
-      console.log(Number(redisBalance));
       if (Number(redisBalance) > 90) {
         if (marketLow === 'kraken') {
           const result = await this.markets[marketLow]['buy'](

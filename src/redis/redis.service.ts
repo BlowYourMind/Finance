@@ -6,6 +6,7 @@ interface RedisSetData {
   key: string;
   marketName: string;
   balanceType: string;
+  value: string | number;
 }
 @Injectable()
 class RedisService {
@@ -24,7 +25,7 @@ class RedisService {
   async set(data: RedisSetData, expire: number): Promise<void> {
     const redisKey = `${data.key}-${data.marketName}-${data.balanceType}-${data.asset}`;
     await this.redisClient.del(redisKey);
-    await this.redisClient.set(redisKey, data.asset);
+    await this.redisClient.set(redisKey, data.value);
     await this.redisClient.expire(redisKey, expire);
   }
 }

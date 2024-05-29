@@ -164,10 +164,10 @@ export class AppService {
     balanceType: string,
     marketName: string,
     key: string,
-    balance: string,
+    value: string,
   ): Promise<void> {
     await redisInstance.set(
-      { key, marketName, balanceType, asset, value: balance },
+      { key, marketName, balanceType, asset, value },
       300,
     );
   }

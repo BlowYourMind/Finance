@@ -13,7 +13,9 @@ interface RedisAction {
   key: string;
   transactionId?: string;
   value: {
-    [market: string]: RedisActionData[];
+    response: {
+      [market: string]: RedisActionData[];
+    };
   };
 }
 

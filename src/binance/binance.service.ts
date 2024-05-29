@@ -13,27 +13,11 @@ import {
 } from 'src/dto/binance.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { IAdapter } from 'src/interfaces/adapter.interface';
-import { redisInstance } from 'src/redis/redis.service';
 
 colors.enable();
 @Injectable()
 export class BinanceService implements IAdapter {
   constructor(private readonly httpService: HttpService) {}
-
-  @Cron(CronExpression.EVERY_10_SECONDS)
-  async updateBlanace() {
-    const asset = await this.check()[0];
-    await redisInstance.set(
-      {
-        key: 'balance',
-        marketName: 'binance',
-        balanceType: 'spot',
-        asset: asset,
-        balance: await this.check()[asset],
-      },
-      10,
-    );
-  }
 
   @Cron(CronExpression.EVERY_SECOND)
   async test() {}
@@ -63,7 +47,7 @@ export class BinanceService implements IAdapter {
       symbol: asset + 'USDT',
       side: 'BUY',
       type: 'MARKET',
-      quantity: amount,
+      quoteOrderQty: amount,
     });
     return (await this.makeRequest(BinanceUrls.ORDER, query)).data;
   }
@@ -214,22 +198,17 @@ export class BinanceService implements IAdapter {
     method: 'POST' | 'GET' = 'POST',
     isFuture: boolean = false,
   ): Promise<any> {
-    const command = method.toLowerCase();
-    const url = isFuture
+    const baseUrl = isFuture
       ? process.env.BINANCE_FUTURE_URL
       : process.env.BINANCE_URL;
+    const url = `${baseUrl}${path}?${params}`;
+    const headers = { headers: SignatureService.createBinanceHeader() };
     try {
-      const res = isFuture
-        ? await firstValueFrom(
-            this.httpService[command](url + path + '?' + params, {
-              headers: SignatureService.createBinanceHeader(),
-            }),
-          )
-        : await firstValueFrom(
-            this.httpService[command](url + path + '?' + params, null, {
-              headers: SignatureService.createBinanceHeader(),
-            }),
-          );
+      const res = await firstValueFrom(
+        method === 'POST'
+          ? this.httpService.post(url, null, headers)
+          : this.httpService.get(url, headers),
+      );
       return res;
     } catch (e) {
       log(e);

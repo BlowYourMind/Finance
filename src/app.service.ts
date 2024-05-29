@@ -7,6 +7,7 @@ import { OkexService } from './okex/okex.service';
 import * as colors from 'colors';
 import { ActionType, redisInstance } from './redis/redis.service';
 import { log } from 'console';
+import { MarketType } from './dto/marketType.dto';
 colors.enable();
 
 @Injectable()
@@ -30,18 +31,20 @@ export class AppService {
       this.getMarketsBalance(market, 'check', 'spot');
       this.getMarketsBalance(market, 'checkFuture', 'future');
     }
-    // this.makeAction({
-    //   amountToBuy: '0.002',
-    //   asset: 'ETH',
-    //   aproxStableValue: '16',
-    //   marketHigh: MarketType.OKEX,
-    //   marketLow: MarketType.KRAKEN,
-    // });
+
+    // setTimeout(() => {
+    //   this.makeAction({
+    //     asset: 'ETH',
+    //     aproxStableValue: '16',
+    //     marketHigh: MarketType.BINANCE,
+    //     marketLow: MarketType.BINANCE,
+    //   });
+    // }, 500);
   }
   async makeAction({
+    amountToBuy,
     marketHigh,
     marketLow,
-    amountToBuy,
     asset,
     aproxStableValue,
   }: ActionInfo) {
@@ -76,6 +79,20 @@ export class AppService {
               (Number(result?.result?.cost) + Number(result?.result?.fee)),
           });
         }
+        if (marketLow === 'binance') {
+          const currentBalance: number =
+            Number(redisBalance) - Number(result?.cummulativeQuoteQty);
+          await redisInstance.set(
+            {
+              asset: 'usdt',
+              key: 'balance',
+              marketName: marketLow,
+              balanceType: 'spot',
+              value: currentBalance,
+            },
+            300,
+          );
+        }
       }
     } catch (error) {
       log(error);
@@ -93,21 +110,35 @@ export class AppService {
       asset,
     );
 
-    // Get transfer address
-    const address = await this.markets[marketHigh]['getDepositAddress'](
-      asset,
-      depositMethods[0].method,
-    );
+    // // Buy Low and Future Lock High
+    // await this.markets[marketLow]['buy'](amountToBuy, asset, aproxStableValue);
+    // await this.markets[marketHigh]['futureBuy'](
+    //   amountToBuy,
+    //   asset,
+    //   aproxStableValue,
+    // );
+    // // TODO: CHECK ASSET PRICE DELTA
 
-    // Transfer from Low to High
-    await this.markets[marketLow]['transfer'](
-      asset,
-      amountToBuy,
-      address.address,
-    );
-    // Sell High and Future Lock
-    await this.markets[marketHigh]['sell'](amountToBuy, asset);
-    await this.markets[marketHigh]['futureSell'](amountToBuy, asset);
+    // // Get deposit network/method
+    // const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
+    //   asset,
+    // );
+
+    // // Get transfer address
+    // const address = await this.markets[marketHigh]['getDepositAddress'](
+    //   asset,
+    //   depositMethods[0].method,
+    // );
+
+    // // Transfer from Low to High
+    // await this.markets[marketLow]['transfer'](
+    //   asset,
+    //   amountToBuy,
+    //   address.address,
+    // );
+    // // Sell High and Future Lock
+    // await this.markets[marketHigh]['sell'](amountToBuy, asset);
+    // await this.markets[marketHigh]['futureSell'](amountToBuy, asset);
   }
   async getMarketsBalance(
     market: string,
@@ -136,7 +167,7 @@ export class AppService {
     balance: string,
   ): Promise<void> {
     await redisInstance.set(
-      { key, marketName, balanceType, asset, balance },
+      { key, marketName, balanceType, asset, value: balance },
       300,
     );
   }
@@ -155,18 +186,20 @@ export class AppService {
       {
         key: 'action',
         transactionId,
-        response: {
-          [market]: [
-            {
-              externalTransactionId: transactionId,
-              amount: Number(amountToBuy),
-              assetPrice: Number(price),
-              assetName: asset,
-              date: new Date(),
-              status,
-              type,
-            },
-          ],
+        value: {
+          response: {
+            [market]: [
+              {
+                externalTransactionId: transactionId,
+                amount: Number(amountToBuy),
+                assetPrice: Number(price),
+                assetName: asset,
+                date: new Date(),
+                status,
+                type,
+              },
+            ],
+          },
         },
       },
       300,
@@ -177,7 +210,7 @@ export class AppService {
         marketName: market,
         balanceType,
         asset: 'usdt',
-        balance,
+        value: balance,
       },
       300,
     );

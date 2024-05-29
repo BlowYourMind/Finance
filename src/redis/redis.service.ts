@@ -1,17 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import Redis from 'ioredis';
 
-interface RedisSetBalance {
-  asset?: string;
+interface RedisBalance {
+  asset: string;
   key: string;
-  marketName?: string;
-  balanceType?: string;
-  balance?: string;
+  marketName: string;
+  balanceType: string;
+  value?: string | number;
+}
+
+interface RedisAction {
+  key: string;
   transactionId?: string;
-  response?: {
+  value: {
     [market: string]: RedisActionData[];
   };
 }
+
 export enum ActionType {
   SPOT_BUY = 'SPOT_BUY',
   SPOT_SELL = 'SPOT_SELL',
@@ -44,24 +49,20 @@ class RedisService {
   async get(key: string): Promise<string> {
     return await this.redisClient.get(key);
   }
-  async set(data: RedisSetBalance, expire: number): Promise<void> {
+  async set(data: RedisBalance | RedisAction, expire: number): Promise<void> {
     const redisKey = this.generateRedisKey(data);
-    console.log(redisKey);
     await this.redisClient.del(redisKey);
-    await this.redisClient.set(
-      redisKey,
-      data.key === 'balance' ? data?.balance : JSON.stringify(data?.response),
-    );
+    await this.redisClient.set(redisKey, JSON.stringify(data?.value));
     await this.redisClient.expire(redisKey, expire);
   }
 
-  generateRedisKey(data: RedisSetBalance): string {
-    if (data?.key === 'balance') {
+  generateRedisKey(data: RedisBalance | RedisAction): string {
+    if (data?.key === 'balance' && 'marketName' in data) {
       return `${data?.key}-${data?.marketName}-${
         data?.balanceType
       }-${data?.asset?.toLowerCase()}`;
     }
-    if (data?.key === 'action') {
+    if (data?.key === 'action' && 'transactionId' in data) {
       return `${data?.key}-${data?.transactionId}`;
     }
   }

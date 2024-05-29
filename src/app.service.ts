@@ -8,13 +8,17 @@ import * as colors from 'colors';
 import { ActionType, redisInstance } from './redis/redis.service';
 import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
+import { v4 as uuidv4 } from 'uuid';
+
 colors.enable();
 
 @Injectable()
 export class AppService {
   markets = {
     binance: this.binanceService,
+    kraken: this.krakenService,
     crypto: this.cryptoService,
+    okex: this.okexService,
   };
   constructor(
     private readonly binanceService: BinanceService,
@@ -63,7 +67,6 @@ export class AppService {
           const result = await this.markets[marketLow]['buy'](
             amountToBuy,
             asset,
-            aproxStableValue,
           );
           await this.setTransactionRedis({
             transactionId: result?.txid,
@@ -83,6 +86,19 @@ export class AppService {
           const result = await this.markets[marketLow]['buy'](
             redisBalance,
             asset,
+          );
+          const redisActionData = {
+            externalTransactionId: result.orderId,
+            amount: result.origQty,
+            assetPrice: result.fills[0].price,
+            assetName: result.symbol,
+            date: result.transactTime,
+            status: result.status,
+            type: 'SPOT_BUY',
+          };
+          await redisInstance.redisClient.set(
+            `action-${uuidv4()}`,
+            JSON.stringify(redisActionData),
           );
           const currentBalance: number =
             Number(redisBalance) - Number(result?.cummulativeQuoteQty);

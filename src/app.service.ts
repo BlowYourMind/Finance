@@ -1,4 +1,4 @@
-import { Get, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BinanceService } from './binance/binance.service';
 import { CryptoService } from './crypto/crypto.service';
 import { ActionInfo } from './dto/makeTrade.dto';
@@ -8,6 +8,8 @@ import * as colors from 'colors';
 import { ActionType, redisInstance } from './redis/redis.service';
 import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
+import { randomUUID } from 'crypto';
+
 colors.enable();
 
 @Injectable()
@@ -32,14 +34,15 @@ export class AppService {
       this.getMarketsBalance(market, 'checkFuture', 'future');
     }
 
-    // setTimeout(() => {
-    //   this.makeAction({
-    //     asset: 'ETH',
-    //     aproxStableValue: '16',
-    //     marketHigh: MarketType.BINANCE,
-    //     marketLow: MarketType.BINANCE,
-    //   });
-    // }, 500);
+    setTimeout(() => {
+      this.makeAction({
+        amountToBuy: '',
+        asset: 'ETH',
+        aproxStableValue: '16',
+        marketHigh: MarketType.BINANCE,
+        marketLow: MarketType.BINANCE,
+      });
+    }, 500);
   }
   async makeAction({
     amountToBuy,
@@ -50,7 +53,7 @@ export class AppService {
   }: ActionInfo) {
     // Buy Low and Future Lock High
     try {
-      const redisBalance = await redisInstance.get(
+      const redisBalance: string = await redisInstance.get(
         redisInstance.generateRedisKey({
           key: 'balance',
           marketName: marketLow,
@@ -58,13 +61,12 @@ export class AppService {
           asset: 'usdt',
         }),
       );
-      if (Number(redisBalance) > 100) {
-        const result = await this.markets[marketLow]['buy'](
-          amountToBuy,
-          asset,
-          aproxStableValue,
-        );
+      if (Number(redisBalance) > 90) {
         if (marketLow === 'kraken') {
+          const result = await this.markets[marketLow]['buy'](
+            amountToBuy,
+            asset,
+          );
           await this.setTransactionRedis({
             transactionId: result?.txid,
             market: marketLow,
@@ -80,6 +82,23 @@ export class AppService {
           });
         }
         if (marketLow === 'binance') {
+          const result = await this.markets[marketLow]['buy'](
+            redisBalance,
+            asset,
+          );
+          const redisActionData = {
+            externalTransactionId: result.orderId,
+            amount: result.origQty,
+            assetPrice: result.fills[0].price,
+            assetName: result.symbol,
+            date: result.transactTime,
+            status: result.status,
+            type: 'SPOT_BUY',
+          };
+          await redisInstance.redisClient.set(
+            `action-${randomUUID()}`,
+            JSON.stringify(redisActionData),
+          );
           const currentBalance: number =
             Number(redisBalance) - Number(result?.cummulativeQuoteQty);
           await redisInstance.set(
@@ -88,7 +107,7 @@ export class AppService {
               key: 'balance',
               marketName: marketLow,
               balanceType: 'spot',
-              value: currentBalance,
+              value: `${currentBalance}`,
             },
             300,
           );
@@ -98,17 +117,17 @@ export class AppService {
       log(error);
     }
 
-    await this.markets[marketHigh]['futureBuy'](
-      amountToBuy,
-      asset,
-      aproxStableValue,
-    );
+    // await this.markets[marketHigh]['futureBuy'](
+    //   amountToBuy,
+    //   asset,
+    //   aproxStableValue,
+    // );
     // TODO: CHECK ASSET PRICE DELTA
 
     // Get deposit network/method
-    const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
-      asset,
-    );
+    // const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
+    //   asset,
+    // );
 
     // // Buy Low and Future Lock High
     // await this.markets[marketLow]['buy'](amountToBuy, asset, aproxStableValue);

@@ -38,9 +38,8 @@ export class SignatureService {
     if (path.startsWith('/derivatives')) {
       path = path.slice('/derivatives'.length)
     }
-    const utf8 = require('utf8');
-    const message = new URLSearchParams(request).toString() + nonce + path;
-    const hash1 = createHash('sha256').update(utf8.encode(message)).digest();
+    const message = encodeURIComponent(new URLSearchParams(request).toString() + nonce + path);
+    const hash1 = createHash('sha256').update(message).digest();
     const decode = Buffer.from(secret, 'base64');
     const hash2 = createHmac('sha512', decode).update(hash1).digest();
 

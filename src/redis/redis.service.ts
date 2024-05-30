@@ -6,7 +6,7 @@ interface RedisBalance {
   key: string;
   marketName: string;
   balanceType: string;
-  value?: string | number;
+  value?: string;
 }
 
 interface RedisAction {
@@ -54,7 +54,7 @@ class RedisService {
   async set(data: RedisBalance | RedisAction, expire: number): Promise<void> {
     const redisKey = this.generateRedisKey(data);
     await this.redisClient.del(redisKey);
-    await this.redisClient.set(redisKey, JSON.stringify(data?.value));
+    await this.redisClient.set(redisKey, `${data?.value}`);
     await this.redisClient.expire(redisKey, expire);
   }
 

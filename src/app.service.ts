@@ -1,4 +1,4 @@
-import { Get, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { BinanceService } from './binance/binance.service';
 import { CryptoService } from './crypto/crypto.service';
 import { ActionInfo } from './dto/makeTrade.dto';
@@ -8,7 +8,7 @@ import * as colors from 'colors';
 import { ActionType, redisInstance } from './redis/redis.service';
 import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 
 colors.enable();
 
@@ -96,7 +96,7 @@ export class AppService {
             type: 'SPOT_BUY',
           };
           await redisInstance.redisClient.set(
-            `action-${uuidv4()}`,
+            `action-${randomUUID()}`,
             JSON.stringify(redisActionData),
           );
           const currentBalance: number =

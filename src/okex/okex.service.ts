@@ -315,15 +315,17 @@ export class OkexService implements IAdapter {
   async check(asset?: string): Promise<BalanceInfo> {
     const nonce = new Date().toISOString();
     const params = asset
-      ? '?' + new URLSearchParams({ ccy: asset }).toString()
+      ? '?' + new URLSearchParams({ ccy: asset.toUpperCase() }).toString()
       : '';
-    const path = OkexUrls.BALANCE + params;
+    const path = OkexUrls.TRADE_BALANCE + params;
     const signature = await this.sign(path, undefined, nonce, 'GET');
     const balance = (
       await this.waitForValue(path, undefined, signature, nonce, 'GET')
     ).data.data[0];
     return {
-      [asset ? asset.toLowerCase() : 'usdt']: balance ? balance.availBal : '0',
+      [asset ? asset.toLowerCase() : 'usdt']: balance
+        ? balance.details[0].availBal
+        : '0',
     };
   }
   async checkTrading(asset?: string): Promise<BalanceInfo> {

@@ -34,15 +34,13 @@ export class AppService {
       this.getMarketsBalance(market, 'checkFuture', 'future');
     }
 
-    setTimeout(() => {
-      this.makeAction({
-        amountToBuy: '',
-        asset: 'ETH',
-        aproxStableValue: '16',
-        marketHigh: MarketType.BINANCE,
-        marketLow: MarketType.BINANCE,
-      });
-    }, 500);
+    this.makeAction({
+      amountToBuy: '0.02',
+      asset: 'ETH',
+      aproxStableValue: '16',
+      marketHigh: MarketType.BINANCE,
+      marketLow: MarketType.OKEX,
+    });
   }
   async makeAction({
     amountToBuy,
@@ -61,14 +59,22 @@ export class AppService {
           asset: 'usdt',
         }),
       );
+      console.log(redisBalance);
       if (Number(redisBalance) > 90) {
+        const result = await this.markets[marketLow]['buy'](
+          amountToBuy,
+          asset,
+          aproxStableValue,
+        );
+        // if (marketLow === 'okex') {
+        //   // USDT/USDC => ETH/USDC
+        //   // ETH/EUR only
+        //   console.log(result);
+        //   //Trading of this pair or contract is restricted due to local compliance requirements
+        // }
         if (marketLow === 'kraken') {
-          const result = await this.markets[marketLow]['buy'](
-            amountToBuy,
-            asset,
-          );
           await this.setTransactionRedis({
-            transactionId: result?.txid,
+            externalTransactionId: result?.txid,
             market: marketLow,
             amountToBuy,
             price: result?.result?.price,
@@ -82,35 +88,17 @@ export class AppService {
           });
         }
         if (marketLow === 'binance') {
-          const result = await this.markets[marketLow]['buy'](
-            redisBalance,
-            asset,
-          );
-          const redisActionData = {
+          await this.setTransactionRedis({
             externalTransactionId: result.orderId,
-            amount: result.origQty,
-            assetPrice: result.fills[0].price,
-            assetName: result.symbol,
-            date: result.transactTime,
+            market: marketLow,
+            amountToBuy: result.origQty,
+            price: result.fills[0].price,
+            asset: result.symbol,
             status: result.status,
-            type: 'SPOT_BUY',
-          };
-          await redisInstance.redisClient.set(
-            `action-${randomUUID()}`,
-            JSON.stringify(redisActionData),
-          );
-          const currentBalance: number =
-            Number(redisBalance) - Number(result?.cummulativeQuoteQty);
-          await redisInstance.set(
-            {
-              asset: 'usdt',
-              key: 'balance',
-              marketName: marketLow,
-              balanceType: 'spot',
-              value: `${currentBalance}`,
-            },
-            300,
-          );
+            type: ActionType.SPOT_BUY,
+            balanceType: 'spot',
+            value: Number(redisBalance) - Number(result?.cummulativeQuoteQty),
+          });
         }
       }
     } catch (error) {
@@ -191,7 +179,7 @@ export class AppService {
     );
   }
   async setTransactionRedis({
-    transactionId,
+    externalTransactionId,
     market,
     amountToBuy,
     price,
@@ -204,12 +192,12 @@ export class AppService {
     await redisInstance.set(
       {
         key: 'action',
-        transactionId,
+        transactionId: randomUUID(),
         value: {
           response: {
             [market]: [
               {
-                externalTransactionId: transactionId,
+                externalTransactionId,
                 amount: Number(amountToBuy),
                 assetPrice: Number(price),
                 assetName: asset,

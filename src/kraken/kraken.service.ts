@@ -303,7 +303,7 @@ export class KrakenService implements IAdapter {
     );
     return {
       [asset ? asset.toLowerCase() : 'usdt']: String(
-        response.data.accounts.flex.currencies.USD.quantity,
+        response.data.accounts?.flex?.currencies?.USD?.quantity,
       ),
     };
   }
@@ -469,7 +469,6 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
-    console.log(balance);
     return {
       [asset.toLowerCase()]:
         balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()],

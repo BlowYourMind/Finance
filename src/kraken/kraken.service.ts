@@ -85,7 +85,7 @@ export class KrakenService implements IAdapter {
   async sign(
     method: KrakenUrls,
     postData: URLSearchParams,
-    nonce: number = Date.now(),
+    nonce: number,
     isFuture = false,
   ) {
     if (isFuture)
@@ -107,7 +107,7 @@ export class KrakenService implements IAdapter {
     url: KrakenUrls,
     postData: URLSearchParams,
     signature: string,
-    nonce: number = Date.now(),
+    nonce: number,
     isFuture = false,
     method: 'POST' | 'GET' = 'POST',
   ) {
@@ -119,7 +119,7 @@ export class KrakenService implements IAdapter {
               ? process.env.KRAKEN_FUTURE_URL + url
               : process.env.KRAKEN_URL + url) +
               '?' +
-              postData.toString()
+              postData
           : isFuture
           ? process.env.KRAKEN_FUTURE_URL + url
           : process.env.KRAKEN_URL + url,
@@ -236,7 +236,7 @@ export class KrakenService implements IAdapter {
     from: KrakenWallets,
     to: KrakenWallets,
   ) {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       asset: asset,
       amount: parseFloat(amount).toFixed(2),
@@ -255,6 +255,7 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
+    console.log(response);
     return response.data.result;
   }
 
@@ -283,7 +284,7 @@ export class KrakenService implements IAdapter {
   }
 
   async checkFuture(asset?: string): Promise<BalanceInfo> {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       nonce: nonce.toString(),
     });
@@ -303,7 +304,7 @@ export class KrakenService implements IAdapter {
     );
     return {
       [asset ? asset.toLowerCase() : 'usdt']: String(
-        response.data.accounts?.flex?.currencies?.USD?.quantity,
+        response.data.accounts?.flex?.currencies?.USDT?.quantity,
       ),
     };
   }
@@ -333,7 +334,7 @@ export class KrakenService implements IAdapter {
   }
 
   async futureBuy(amount: string, asset: string) {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       orderType: 'mkt',
       side: 'buy',
@@ -353,10 +354,12 @@ export class KrakenService implements IAdapter {
       nonce,
       true,
     );
+    console.log(balance.data);
+    return balance.data;
   }
 
   async futureSell(amount: string, asset: string) {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       // nonce: nonce.toString(),
       orderType: 'mkt',
@@ -377,6 +380,7 @@ export class KrakenService implements IAdapter {
       nonce,
       true,
     );
+    return balance.data;
   }
 
   async getOrder(txid: string) {

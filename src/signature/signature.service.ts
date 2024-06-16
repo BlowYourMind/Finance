@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { createHmac, createHash } from 'crypto';
-import * as colors from "colors"
+import * as colors from 'colors';
 import { log } from 'console';
 import { CatchAll } from 'src/try.decorator';
 colors.enable();
@@ -36,9 +36,9 @@ export class SignatureService {
     nonce: number,
   ) {
     if (path.startsWith('/derivatives')) {
-      path = path.slice('/derivatives'.length)
+      path = path.slice('/derivatives'.length);
     }
-    const message = encodeURIComponent(new URLSearchParams(request).toString() + nonce + path);
+    const message = new URLSearchParams(request).toString() + nonce + path;
     const hash1 = createHash('sha256').update(message).digest();
     const decode = Buffer.from(secret, 'base64');
     const hash2 = createHmac('sha512', decode).update(hash1).digest();
@@ -61,9 +61,7 @@ export class SignatureService {
       .digest('base64');
   }
 
-  public encryptBinanceWSData(data: string, key: string) {
-
-  }
+  public encryptBinanceWSData(data: string, key: string) {}
 
   public static encryptBinanceData(data: string, key: string) {
     return createHmac('sha256', key).update(data).digest('hex');
@@ -83,14 +81,18 @@ export class SignatureService {
       'X-MBX-APIKEY': process.env.BINANCE_PUBLIC_KEY,
     };
   }
-  public static createKrakenHeader(signature: string, nonce: number, isFuture: boolean = false) {
+  public static createKrakenHeader(
+    signature: string,
+    nonce: number,
+    isFuture: boolean = false,
+  ) {
     if (isFuture) {
       return {
         Accept: 'application/json',
         APIKey: process.env.KRAKEN_FUTURE_PUBLIC_KEY,
         Nonce: nonce.toString(),
         Authent: signature,
-      }
+      };
     }
     return {
       Accept: 'application/json',
@@ -100,5 +102,4 @@ export class SignatureService {
       'Content-Type': 'application/x-www-form-urlencoded',
     };
   }
-
 }

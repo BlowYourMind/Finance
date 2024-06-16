@@ -35,6 +35,7 @@ export enum BinanceUrls {
   GET_ASSET = '/sapi/v3/asset/getUserAsset',
   FUTURE_BALANCE = '/fapi/v2/balance',
   FUTURE_POSITION = '/fapi/v2/positionRisk',
+  FUTURE_TRASFER = '/sapi/v1/futures/transfer',
   TRANSFER = '/sapi/v1/asset/transfer',
   CAPITAL_CONFIG = '/sapi/v1/capital/config/getall',
   WITHDRAW = '/sapi/v1/capital/withdraw/apply',

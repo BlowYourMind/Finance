@@ -42,7 +42,7 @@ export class AppService {
         marketHigh: MarketType.BINANCE,
         marketLow: MarketType.BINANCE,
       });
-    }, 500);
+    }, 2000);
   }
   async makeAction({
     amountToBuy,
@@ -61,7 +61,7 @@ export class AppService {
           asset: 'usdt',
         }),
       );
-      if (Number(redisBalance) > 90) {
+      if (Number(redisBalance) > 50) {
         if (marketLow === 'kraken') {
           const result = await this.markets[marketLow]['buy'](
             amountToBuy,
@@ -117,6 +117,26 @@ export class AppService {
       log(error);
     }
 
+    try {
+      const redisBalance: string = await redisInstance.get(
+        redisInstance.generateRedisKey({
+          key: 'balance',
+          marketName: marketHigh,
+          balanceType: 'spot',
+          asset: 'usdt',
+        }),
+      );
+      if (marketHigh == 'binance') {
+        const futureBuyResult = await this.markets[marketHigh].futureBuy(
+          redisBalance,
+          asset,
+          aproxStableValue,
+        );
+        console.log(futureBuyResult);
+      }
+    } catch (error) {
+      log(error);
+    }
     // await this.markets[marketHigh]['futureBuy'](
     //   amountToBuy,
     //   asset,

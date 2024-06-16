@@ -24,18 +24,26 @@ export class BinanceService implements IAdapter {
 
   async futureBuy(amount: string, asset: string, approxStableValue: string) {
     await this.futuresTransfer('USDT', Number(amount), 1);
-    const res = await this.makeRequest(
+
+    const quantity = Number(
+      await this.getAvailabeAssetQuantityForAmount(asset, Number(amount)),
+    ).toFixed(3);
+
+    const response = await this.makeRequest(
       BinanceUrls.FUTURE_ORDER,
-      await this.makeQuery(await this.makeFutureParams(asset, amount, 'SELL')), // cannot be smaller than 0.006
+      await this.makeQuery(
+        await this.makeFutureParams(asset, `${quantity}`, 'SELL'),
+      ),
       'POST',
       true,
     );
-    await this.futuresTransfer(
-      'USDT',
-      Number((await this.checkFuture())['usdt']),
-      2,
-    );
-    return res.data;
+
+    const remainingBalance = Number((await this.checkFuture())['usdt']);
+    await this.futuresTransfer('USDT', remainingBalance, 2);
+    return {
+      futureBuyResponse: response,
+      remainingBalance: `${remainingBalance}`,
+    };
   }
 
   // transferTypes:
@@ -62,7 +70,19 @@ export class BinanceService implements IAdapter {
     });
     return (await this.makeRequest(BinanceUrls.ORDER, query)).data;
   }
-
+  async getAvailabeAssetQuantityForAmount(
+    asset: string,
+    amount: number,
+  ): Promise<number> {
+    const query = await this.makeQuery({ symbol: asset + 'USDT' });
+    const assetPriceResult = await this.makeRequest(
+      '/fapi/v1/ticker/price',
+      query,
+      'GET',
+      true,
+    );
+    return amount / assetPriceResult.data.price;
+  }
   async delay(ms: number) {
     return new Promise((resolve) => {
       setTimeout(resolve, ms);

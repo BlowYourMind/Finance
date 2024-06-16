@@ -63,9 +63,9 @@ export class AppService {
       );
 
       console.log(redisBalance);
-      if (Number(redisBalance) > 90) {
+      if (Number(redisBalance) > 50) {
         const result = await this.markets[marketLow]['buy'](
-          amountToBuy,
+          redisBalance, // amountToBuy changed to redisBalance | We need to buy for all available money
           asset,
           aproxStableValue,
         );
@@ -123,7 +123,22 @@ export class AppService {
           asset,
           aproxStableValue,
         );
-        console.log(futureBuyResult);
+        if (futureBuyResult) {
+          const remainingBalance = futureBuyResult.remainingBalance;
+          const result = futureBuyResult.futureBuyResponse;
+          await this.setTransactionRedis({
+            externalTransactionId: result.orderId,
+            market: marketHigh,
+            amountToBuy: result.origQty,
+            price: Number(redisBalance) - Number(remainingBalance),
+            asset: result.symbol,
+            status: result.status,
+            type: ActionType.FUTURE_BUY,
+            balanceType: 'spot',
+            value: remainingBalance,
+          });
+          console.log(await redisInstance.get('balance-binance-spot-usdt'));
+        }
       }
     } catch (error) {
       log(error);

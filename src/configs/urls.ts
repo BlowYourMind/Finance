@@ -1,4 +1,3 @@
-
 export enum KrakenUrls {
   WITHDRAW_INFO = '/0/private/WithdrawInfo',
   WITHDRAW = '/0/private/Withdraw',

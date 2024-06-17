@@ -324,7 +324,7 @@ export class OkexService implements IAdapter {
     ).data.data[0];
     return {
       [asset ? asset.toLowerCase() : 'usdt']: balance
-        ? balance.details[0].availBal
+        ? balance.details[0]?.availBal
         : '0',
     };
   }
@@ -358,8 +358,8 @@ export class OkexService implements IAdapter {
     // availEq | String | Available equity of currency, The balance that can be used on margin or futures/swap trading, Applicable to Single-currency margin/Multi-currency margin/Portfolio margin
     // https://www.okx.com/docs-v5/en/#trading-account-rest-api-get-balance
     return {
-      [asset ? asset.toLowerCase() : 'usdt']: balance.details[0].availEq
-        ? balance.details[0].availEq
+      [asset ? asset.toLowerCase() : 'usdt']: balance.details[0]?.availEq
+        ? balance.details[0]?.availEq
         : '0',
     };
   }

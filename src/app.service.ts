@@ -17,9 +17,9 @@ colors.enable();
 export class AppService {
   markets = {
     binance: this.binanceService,
-    kraken: this.krakenService,
+    // kraken: this.krakenService,
     crypto: this.cryptoService,
-    okex: this.okexService,
+    // okex: this.okexService,
   };
   constructor(
     private readonly binanceService: BinanceService,
@@ -35,13 +35,15 @@ export class AppService {
       this.getMarketsBalance(market, 'checkFuture', 'futures');
     }
 
-    this.makeAction({
-      amountToBuy: '0.02',
-      asset: 'ETH',
-      aproxStableValue: '16',
-      marketHigh: MarketType.BINANCE,
-      marketLow: MarketType.KRAKEN,
-    });
+    setTimeout(() => {
+      this.makeAction({
+        amountToBuy: '0.02',
+        asset: 'ETH',
+        aproxStableValue: '16',
+        marketHigh: MarketType.BINANCE,
+        marketLow: MarketType.BINANCE,
+      });
+    }, 2000);
   }
   async makeAction({
     amountToBuy,
@@ -56,17 +58,16 @@ export class AppService {
         redisInstance.generateRedisKey({
           key: 'balance',
           marketName: marketLow,
-          balanceType: 'futures',
+          balanceType: 'spot',
           asset: 'usdt',
         }),
       );
-      if (Number(redisBalance) > 100000) {
+      if (Number(redisBalance) > 500000) {
         const spotResult = await this.markets[marketLow]['buy'](
-          amountToBuy,
+          marketLow == 'binance' ? redisBalance : amountToBuy,
           asset,
           aproxStableValue,
         );
-
         await this.setTransactionRedis({
           externalTransactionId: spotResult?.txid,
           market: marketLow,
@@ -178,11 +179,6 @@ export class AppService {
           }
         }
         if (marketLow === 'binance') {
-          const spotResult = await this.markets[marketLow]['futureBuy'](
-            amountToBuy,
-            asset,
-            aproxStableValue,
-          );
           await this.setTransactionRedis({
             externalTransactionId: spotResult.orderId,
             market: marketLow,
@@ -200,6 +196,48 @@ export class AppService {
     } catch (error) {
       log(error);
     }
+
+    try {
+      const redisBalance: string = await redisInstance.get(
+        redisInstance.generateRedisKey({
+          key: 'balance',
+          marketName: marketHigh,
+          balanceType: 'spot',
+          asset: 'usdt',
+        }),
+      );
+      if (marketHigh == 'binance') {
+        const futureBuyResult = await this.markets[marketHigh].futureBuy(
+          redisBalance,
+          asset,
+          aproxStableValue,
+        );
+        if (futureBuyResult) {
+          const remainingBalance = futureBuyResult.remainingBalance;
+          const result = futureBuyResult.futureBuyResponse;
+          await this.setTransactionRedis({
+            externalTransactionId: result.orderId,
+            market: marketHigh,
+            amountToBuy: result.origQty,
+            price: Number(redisBalance) - Number(remainingBalance),
+            asset: result.symbol,
+            status: result.status,
+            type: ActionType.FUTURE_BUY,
+            balanceType: 'spot',
+            value: remainingBalance,
+          });
+          console.log(await redisInstance.get('balance-binance-spot-usdt'));
+        }
+      }
+    } catch (error) {
+      log(error);
+    }
+
+    // await this.markets[marketHigh]['futureBuy'](
+    //   amountToBuy,
+    //   asset,
+    //   aproxStableValue,
+    // );
 
     // TODO: CHECK ASSET PRICE DELTA
 

@@ -17,7 +17,7 @@ colors.enable();
 export class AppService {
   markets = {
     binance: this.binanceService,
-    // kraken: this.krakenService,
+    kraken: this.krakenService,
     crypto: this.cryptoService,
     // okex: this.okexService,
   };

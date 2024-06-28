@@ -255,12 +255,11 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
-    console.log(response);
     return response.data.result;
   }
 
-  async futureWalletTransfer(asset: string, amount: string, from = 'cash') {
-    const nonce = Date.now();
+  async futureWalletTransfer(asset: string, amount: string, from = 'flex') {
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       currency: asset,
       amount: amount,
@@ -280,7 +279,7 @@ export class KrakenService implements IAdapter {
       nonce,
       true,
     );
-    return response.data.result;
+    return response.data;
   }
 
   async checkFuture(asset?: string): Promise<BalanceInfo> {
@@ -421,12 +420,12 @@ export class KrakenService implements IAdapter {
     return { result: order?.result?.[txid], txid };
   }
 
-  async sell(amount: string, asset: string): Promise<BalanceInfo> {
+  async sell(amount: string, asset: string): Promise<any> {
     const volume = Number(
       (await this.checkAll())['X' + asset.toUpperCase()],
     ).toFixed(5);
     log(volume);
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       nonce: nonce.toString(),
       ordertype: 'market',
@@ -442,16 +441,20 @@ export class KrakenService implements IAdapter {
       nonce,
     );
     log(balance);
-    const txid = balance.data.result.txid[0];
+    const txid = balance?.data?.result?.txid[0];
     const order = await this.waitUntilOrderIsClosed(txid);
-    return await this.waitUntilAssetIsOnWallet(
-      asset,
-      (order.result[txid].cost - order.result[txid].fee).toFixed(2),
-    );
+    return {
+      order,
+      txid,
+      amount: await this.waitUntilAssetIsOnWallet(
+        asset,
+        (order?.result?.[txid]?.cost - order?.result?.[txid]?.fee).toFixed(2),
+      ),
+    };
   }
 
   async checkAll(): Promise<BalanceInfo> {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({ nonce: nonce.toString() });
     const signature = await this.sign(KrakenUrls.BALANCE, postData, nonce);
     const balance = await this.waitForValue(
@@ -473,9 +476,16 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
+    // console.log(balance);
     return {
       [asset.toLowerCase()]:
-        balance.data.result[asset === 'USD' ? 'ZUSD' : asset.toUpperCase()],
+        balance.data.result[
+          asset === 'USD'
+            ? 'ZUSD'
+            : asset === 'ETH'
+            ? 'XETH'
+            : asset.toUpperCase()
+        ],
     };
   }
 }

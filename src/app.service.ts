@@ -10,6 +10,7 @@ import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
 import { randomUUID } from 'crypto';
 import { KrakenWallets } from './dto/kraken.dto';
+import { response } from 'express';
 
 colors.enable();
 
@@ -28,22 +29,20 @@ export class AppService {
     private readonly okexService: OkexService,
   ) {
     for (let market in this.markets) {
-      if (market === 'crypto') {
+      if (market === 'crypto' || market === 'binance') {
         continue;
       }
       this.getMarketsBalance(market, 'check', 'spot');
       this.getMarketsBalance(market, 'checkFuture', 'futures');
     }
 
-    setTimeout(() => {
-      this.makeAction({
-        amountToBuy: '0.02',
-        asset: 'ETH',
-        aproxStableValue: '16',
-        marketHigh: MarketType.BINANCE,
-        marketLow: MarketType.BINANCE,
-      });
-    }, 2000);
+    this.makeAction({
+      amountToBuy: '0.02',
+      asset: 'ETH',
+      aproxStableValue: '16',
+      marketHigh: MarketType.BINANCE,
+      marketLow: MarketType.KRAKEN,
+    });
   }
   async makeAction({
     amountToBuy,
@@ -110,7 +109,7 @@ export class AppService {
               balanceType: 'spot',
               value: redisBalance,
             });
-            const futureResult = await this.markets[marketLow]['futureBuy'](
+            const futureResult = await this.markets[marketHigh]['futureBuy'](
               amountToBuy,
               asset,
             );
@@ -128,22 +127,22 @@ export class AppService {
               value: Number(futureResult?.sendStatus?.orderEvents[0]?.amount),
             });
           }
-          const sellResult = await this.markets[marketLow]['futureSell'](
+          const futureSellResult = await this.markets[marketLow]['futureSell'](
             amountToBuy,
             asset,
           );
           await this.setTransactionRedis({
-            externalTransactionId: sellResult?.sendStatus?.order_id,
+            externalTransactionId: futureSellResult?.sendStatus?.order_id,
             market: marketLow,
-            amountToBuy: sellResult?.sendStatus?.orderEvents[0]?.amount,
-            price: sellResult?.sendStatus?.orderEvents[0]?.price,
+            amountToBuy: futureSellResult?.sendStatus?.orderEvents[0]?.amount,
+            price: futureSellResult?.sendStatus?.orderEvents[0]?.price,
             asset:
-              sellResult?.sendStatus?.orderEvents[0]?.orderPriorExecution
+              futureSellResult?.sendStatus?.orderEvents[0]?.orderPriorExecution
                 ?.symbol,
-            status: sellResult?.sendStatus?.status,
+            status: futureSellResult?.sendStatus?.status,
             type: ActionType.FUTURE_SELL,
             balanceType: 'futures',
-            value: Number(sellResult?.sendStatus?.orderEvents[0]?.amount),
+            value: Number(futureSellResult?.sendStatus?.orderEvents[0]?.amount),
           });
           await this.markets[marketLow]['checkFuture'](asset).then(
             (response) => {
@@ -152,9 +151,17 @@ export class AppService {
               }
             },
           );
+          const futureBalance: string = await redisInstance.get(
+            redisInstance.generateRedisKey({
+              key: 'balance',
+              marketName: marketLow,
+              balanceType: 'futures',
+              asset: 'usdt',
+            }),
+          );
           const transferBackToSpot = await this.markets[marketLow][
-            'walletTransfer'
-          ]('usdt', redisBalance, KrakenWallets.FUTURES, KrakenWallets.SPOT);
+            'futureWalletTransfer'
+          ]('usdt', futureBalance);
           if (transferBackToSpot) {
             await redisInstance.set(
               {
@@ -167,7 +174,7 @@ export class AppService {
               300,
             );
             await this.setTransactionRedis({
-              externalTransactionId: transferBackToSpot.data?.result?.refid,
+              externalTransactionId: transferBackToSpot?.data?.result?.refid,
               market: marketLow,
               amountToBuy: redisBalance,
               price: 'undefined',
@@ -178,6 +185,21 @@ export class AppService {
               value: redisBalance,
             });
           }
+          const sellResult = await this.markets[marketHigh]['sell'](
+            amountToBuy,
+            asset.toUpperCase(),
+          );
+          await this.setTransactionRedis({
+            externalTransactionId: sellResult.txid,
+            market: marketLow,
+            amountToBuy: spotResult.amount[0],
+            price: spotResult.result[spotResult.txid].price,
+            asset,
+            status: spotResult.result[spotResult.txid].status,
+            type: ActionType.SPOT_SELL,
+            balanceType: 'spot',
+            value: spotResult.amount[0],
+          });
         }
         if (marketLow === 'binance') {
           //binance spot buy

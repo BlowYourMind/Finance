@@ -17,7 +17,7 @@ colors.enable();
 export class AppService {
   markets = {
     binance: this.binanceService,
-    // kraken: this.krakenService,
+    kraken: this.krakenService,
     crypto: this.cryptoService,
     // okex: this.okexService,
   };
@@ -62,7 +62,8 @@ export class AppService {
           asset: 'usdt',
         }),
       );
-      if (Number(redisBalance) > 500000) {
+
+      if (Number(redisBalance) > 50) {
         const spotResult = await this.markets[marketLow]['buy'](
           marketLow == 'binance' ? redisBalance : amountToBuy,
           asset,
@@ -179,6 +180,7 @@ export class AppService {
           }
         }
         if (marketLow === 'binance') {
+          //binance spot buy
           await this.setTransactionRedis({
             externalTransactionId: spotResult.orderId,
             market: marketLow,
@@ -190,6 +192,21 @@ export class AppService {
             balanceType: 'spot',
             value:
               Number(redisBalance) - Number(spotResult?.cummulativeQuoteQty),
+          });
+          // biance spot sell
+          const spotSellResult = await this.markets[marketLow]['sell']('ETH');
+          await this.setTransactionRedis({
+            externalTransactionId: spotSellResult.orderId,
+            market: marketLow,
+            amountToBuy: spotSellResult.origQty,
+            price: spotSellResult.fills[0].price,
+            asset: spotSellResult.symbol,
+            status: spotSellResult.status,
+            type: ActionType.SPOT_SELL,
+            balanceType: 'spot',
+            value:
+              Number(redisBalance) +
+              Number(spotSellResult?.cummulativeQuoteQty),
           });
         }
       }

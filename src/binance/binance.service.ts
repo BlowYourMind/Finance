@@ -104,13 +104,13 @@ export class BinanceService implements IAdapter {
     return res.data;
   }
 
-  async sell(amount: string, asset: string) {
+  async sell(asset: string) {
     const limit = await this.getCapitalConfig(asset);
     const query = await this.makeQuery({
       symbol: asset + 'USDT',
       side: 'SELL',
       type: 'MARKET',
-      quantity: limit.free,
+      quantity: Number(limit.free).toFixed(3),
     });
     return (await this.makeRequest(BinanceUrls.ORDER, query)).data;
   }

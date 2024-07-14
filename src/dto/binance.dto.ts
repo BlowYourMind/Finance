@@ -84,11 +84,6 @@ export enum BinanceTransferTypes {
     MAIN_ISOLATED_MARGIN = 'MAIN_ISOLATED_MARGIN',
     ISOLATED_MARGIN_MAIN = 'ISOLATED_MARGIN_MAIN',
 }
-export interface BinanceMoveParameters {
-    amount: string,
-    asset: string,
-    type: BinanceTransferTypes
-}
 
 export interface BinanceFutureActionParams {
   symbol: string;

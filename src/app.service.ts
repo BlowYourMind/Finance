@@ -29,20 +29,22 @@ export class AppService {
     private readonly okexService: OkexService,
   ) {
     for (let market in this.markets) {
-      if (market === 'crypto' || market === 'binance') {
+      if (market === 'crypto' || market === 'kraken') {
         continue;
       }
       this.getMarketsBalance(market, 'check', 'spot');
       this.getMarketsBalance(market, 'checkFuture', 'futures');
     }
 
-    this.makeAction({
-      amountToBuy: '0.02',
-      asset: 'ETH',
-      aproxStableValue: '16',
-      marketHigh: MarketType.BINANCE,
-      marketLow: MarketType.KRAKEN,
-    });
+    setTimeout(() => {
+      this.makeAction({
+        amountToBuy: '0.02',
+        asset: 'ETH',
+        aproxStableValue: '16',
+        marketHigh: MarketType.BINANCE,
+        marketLow: MarketType.BINANCE,
+      });
+    }, 2000);
   }
   async makeAction({
     amountToBuy,
@@ -61,8 +63,8 @@ export class AppService {
           asset: 'usdt',
         }),
       );
-
-      if (Number(redisBalance) > 50) {
+      console.log('redisBalance', redisBalance);
+      if (Number(redisBalance) > 30) {
         const spotResult = await this.markets[marketLow]['buy'](
           marketLow == 'binance' ? redisBalance : amountToBuy,
           asset,
@@ -201,71 +203,53 @@ export class AppService {
             value: spotResult.amount[0],
           });
         }
-        if (marketLow === 'binance') {
-          //binance spot buy
-          await this.setTransactionRedis({
-            externalTransactionId: spotResult.orderId,
-            market: marketLow,
-            amountToBuy: spotResult.origQty,
-            price: spotResult.fills[0].price,
-            asset: spotResult.symbol,
-            status: spotResult.status,
-            type: ActionType.SPOT_BUY,
-            balanceType: 'spot',
-            value:
-              Number(redisBalance) - Number(spotResult?.cummulativeQuoteQty),
-          });
-          // biance spot sell
-          const spotSellResult = await this.markets[marketLow]['sell']('ETH');
-          await this.setTransactionRedis({
-            externalTransactionId: spotSellResult.orderId,
-            market: marketLow,
-            amountToBuy: spotSellResult.origQty,
-            price: spotSellResult.fills[0].price,
-            asset: spotSellResult.symbol,
-            status: spotSellResult.status,
-            type: ActionType.SPOT_SELL,
-            balanceType: 'spot',
-            value:
-              Number(redisBalance) +
-              Number(spotSellResult?.cummulativeQuoteQty),
-          });
-        }
-      }
-    } catch (error) {
-      log(error);
-    }
 
-    try {
-      const redisBalance: string = await redisInstance.get(
-        redisInstance.generateRedisKey({
-          key: 'balance',
-          marketName: marketHigh,
+        //binance spot buy to redis
+        await this.setTransactionRedis({
+          externalTransactionId: spotResult.orderId,
+          market: marketLow,
+          amountToBuy: spotResult.origQty,
+          price: spotResult.fills[0].price,
+          asset: spotResult.symbol,
+          status: spotResult.status,
+          type: ActionType.SPOT_BUY,
           balanceType: 'spot',
-          asset: 'usdt',
-        }),
-      );
-      if (marketHigh == 'binance') {
-        const futureBuyResult = await this.markets[marketHigh].futureBuy(
-          redisBalance,
-          asset,
-          aproxStableValue,
+          value: Number(redisBalance) - Number(spotResult?.cummulativeQuoteQty),
+        });
+
+        // biance spot sell
+        await this.setTransactionRedis(
+          await this.markets[marketLow]['sell']('ETH', redisBalance),
         );
-        if (futureBuyResult) {
-          const remainingBalance = futureBuyResult.remainingBalance;
-          const result = futureBuyResult.futureBuyResponse;
-          await this.setTransactionRedis({
-            externalTransactionId: result.orderId,
-            market: marketHigh,
-            amountToBuy: result.origQty,
-            price: Number(redisBalance) - Number(remainingBalance),
-            asset: result.symbol,
-            status: result.status,
-            type: ActionType.FUTURE_BUY,
-            balanceType: 'spot',
-            value: remainingBalance,
-          });
-          console.log(await redisInstance.get('balance-binance-spot-usdt'));
+
+        try {
+          let redisFutureBalance: string = await redisInstance.get(
+            redisInstance.generateRedisKey({
+              key: 'balance',
+              marketName: marketHigh,
+              balanceType: 'futures',
+              asset: 'bnfcr',
+            }),
+          );
+
+          // binace future buy
+          await this.setTransactionRedis(
+            await this.markets[marketHigh].futureBuy(
+              Number(spotResult.origQty).toFixed(3),
+              asset,
+              redisFutureBalance,
+            ),
+          );
+
+          // binance future sell
+          await this.setTransactionRedis(
+            await this.markets[marketHigh].futureSell(
+              asset,
+              redisFutureBalance,
+            ),
+          );
+        } catch (error) {
+          log(error);
         }
       }
     } catch (error) {

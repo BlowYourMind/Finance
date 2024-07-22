@@ -108,7 +108,7 @@ export class OkexService implements IAdapter {
     return [{ method: 'OKExChain' }];
   }
 
-  async getDepositAddress(asset: string, method: string) {
+  async getDepositAddress(asset: string) {
     const nonce = new Date().toISOString();
     const path =
       OkexUrls.DEPOSIT_ADDRESS +

@@ -146,7 +146,7 @@ export class KrakenService implements IAdapter {
   }
 
   async getDepositMethods(asset: string) {
-    const nonce = Date.now();
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       asset: asset,
       nonce: nonce.toString(),
@@ -169,15 +169,12 @@ export class KrakenService implements IAdapter {
         nonce,
       )
     ).data.result;
-    return response.filter((elem) => elem.method === 'Ethereum (ERC20)');
+    return response.filter((elem) => elem.method === 'ETH - Polygon (Unified)');
   }
 
-  async getDepositAddress(
-    asset: string,
-    method: string,
-    isNew: boolean = false,
-  ) {
-    const nonce = Date.now();
+  async getDepositAddress(asset: string) {
+    const method = (await this.getDepositMethods(asset))[0].method;
+    const nonce = Math.floor(Date.now() * 1000);
     const postData = new URLSearchParams({
       asset: asset,
       method: method,
@@ -201,10 +198,10 @@ export class KrakenService implements IAdapter {
       > = response.data.result;
       if (response.data.result.length === 0)
         throw new Error('No address found');
-      return result[0];
+      return result[0].address;
     } catch (e) {
       if (e.message === 'No address found') {
-        const nonce = Date.now();
+        const nonce = Math.floor(Date.now() * 1000);
         const postData = new URLSearchParams({
           asset: asset,
           method: method,
@@ -225,7 +222,7 @@ export class KrakenService implements IAdapter {
         const result: Promise<
           { method: string; limit: boolean; 'gen-address': boolean }[]
         > = response.data.result;
-        return result[0];
+        return result[0].address;
       }
     }
   }

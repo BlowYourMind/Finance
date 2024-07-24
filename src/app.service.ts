@@ -40,8 +40,8 @@ export class AppService {
         amountToBuy: '0.02',
         asset: 'ETH',
         aproxStableValue: '16',
-        marketHigh: MarketType.BINANCE,
-        marketLow: MarketType.KRAKEN,
+        marketHigh: MarketType.KRAKEN,
+        marketLow: MarketType.BINANCE,
       });
     }, 2000);
   }
@@ -256,10 +256,16 @@ export class AppService {
     }
 
     // market low to market high transaction
-    const transferAddress = await this.markets[marketHigh].getDepositAddress(
-      asset,
+    redisInstance.set(
+      {
+        key: 'TRANSFER',
+        transactionId: await this.markets[marketLow].transfer(
+          asset,
+          await this.markets[marketHigh].getDepositAddress(asset),
+        ).id,
+      },
+      300,
     );
-    await this.markets[marketLow].transfer(asset, transferAddress);
 
     // TODO: CHECK ASSET PRICE DELTA
 

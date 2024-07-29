@@ -37,7 +37,7 @@ export class AppService {
     private readonly okexService: OkexService,
   ) {
     for (let market in this.markets) {
-      if (market === 'crypto' || market === 'kraken') {
+      if (market === 'crypto') {
         continue;
       }
       this.getMarketsBalance(market, 'check', 'spot');
@@ -83,12 +83,23 @@ export class AppService {
       //   aproxStableValue,
       //   this.markets[marketHigh].service,
       // );
-
       if (Number(redisBalance)) {
         // low.walletTransfer(redisBalance);
         // low.check();
-        low.futureWalletTransfer();
-        console.log(redisBalance);
+        // low.futureWalletTransfer();
+        // low.checkFuture();
+        // low.check();
+        // low.buy();
+        // setTimeout(() => {
+        //   low.sell();
+        // }, 200);
+        // setTimeout(() => {
+        //   low.check();
+        // }, 200);
+        // low.futureBuy();
+        // setTimeout(() => {
+        //   low.futureSell();
+        // });
         //   if (Number(redisBalance) > 30) {
         //     const spotResult = await this.markets[marketLow]['buy'](
         //       marketLow == 'binance' ? redisBalance : amountToBuy,
@@ -109,7 +120,6 @@ export class AppService {
         //         (Number(spotResult?.result?.cost) +
         //           Number(spotResult?.result?.fee)),
         //     });
-
         //     if (marketLow === 'kraken') {
         //       const transferResult = await this.markets[marketLow][
         //         'walletTransfer'
@@ -228,7 +238,6 @@ export class AppService {
         //         value: spotResult.amount[0],
         //       });
         //     }
-
         //     //binance spot buy to redis
         //     await this.setTransactionRedis({
         //       externalTransactionId: spotResult.orderId,
@@ -241,12 +250,10 @@ export class AppService {
         //       balanceType: 'spot',
         //       value: Number(redisBalance) - Number(spotResult?.cummulativeQuoteQty),
         //     });
-
         //     // biance spot sell
         //     await this.setTransactionRedis(
         //       await this.markets[marketLow]['sell']('ETH', redisBalance),
         //     );
-
         //     try {
         //       let redisFutureBalance: string = await redisInstance.get(
         //         redisInstance.generateRedisKey({
@@ -256,7 +263,6 @@ export class AppService {
         //           asset: 'bnfcr',
         //         }),
         //       );
-
         //       // binace future buy
         //       await this.setTransactionRedis(
         //         await this.markets[marketHigh].futureBuy(
@@ -265,7 +271,6 @@ export class AppService {
         //           redisFutureBalance,
         //         ),
         //       );
-
         //       // binance future sell
         //       await this.setTransactionRedis(
         //         await this.markets[marketHigh].futureSell(
@@ -280,7 +285,6 @@ export class AppService {
         // } catch (error) {
         //   log(error);
         // }
-
         // try {
         //   const redisBalance: string = await redisInstance.get(
         //     redisInstance.generateRedisKey({
@@ -314,20 +318,16 @@ export class AppService {
         // } catch (error) {
         //   log(error);
         // }
-
         // await this.markets[marketHigh]['futureBuy'](
         //   amountToBuy,
         //   asset,
         //   aproxStableValue,
         // );
-
         // TODO: CHECK ASSET PRICE DELTA
-
         // Get deposit network/method
         // const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
         //   asset,
         // );
-
         // // Buy Low and Future Lock High
         // await this.markets[marketLow]['buy'](amountToBuy, asset, aproxStableValue);
         // await this.markets[marketHigh]['futureBuy'](
@@ -336,18 +336,15 @@ export class AppService {
         //   aproxStableValue,
         // );
         // // TODO: CHECK ASSET PRICE DELTA
-
         // // Get deposit network/method
         // const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
         //   asset,
         // );
-
         // // Get transfer address
         // const address = await this.markets[marketHigh]['getDepositAddress'](
         //   asset,
         //   depositMethods[0].method,
         // );
-
         // // Transfer from Low to High
         // await this.markets[marketLow]['transfer'](
         //   asset,

@@ -280,8 +280,7 @@ export class KrakenService implements IAdapter {
       nonce,
       true,
     );
-    console.log(response);
-    return response?.data?.errors;
+    return response?.data;
   }
 
   async checkFuture(asset?: string): Promise<BalanceInfo> {
@@ -316,7 +315,7 @@ export class KrakenService implements IAdapter {
 
   async waitUntilOrderIsClosed(txid: string) {
     let order = await this.getOrder(txid);
-    while (order?.result?.[txid].status !== 'closed') {
+    while (order?.result?.[txid]?.status !== 'closed') {
       await this.delay(1000);
       order = await this.getOrder(txid);
     }

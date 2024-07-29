@@ -34,6 +34,7 @@ export class Kraken implements Market {
         (Number(result?.result.cost) + Number(result?.result.fee)),
     });
     console.log(result);
+    console.log('SpotBuy: ', result);
     console.log(await redisInstance.get('action-kraken'));
   }
   async sell(): Promise<void> {
@@ -45,14 +46,14 @@ export class Kraken implements Market {
       externalTransactionId: result?.txid,
       market: 'kraken',
       amountToBuy: result?.amount[0],
-      price: result?.result[result.txid].price,
+      price: result?.result?.[result.txid].price,
       asset: this.asset,
-      status: result?.result[result.txid].status,
+      status: result?.result?.[result.txid].status,
       type: ActionType.SPOT_SELL,
       balanceType: 'spot',
       value: result?.amount[0],
     });
-    console.log(result.data.result);
+    console.log('SpotSell: ', result?.txid);
     console.log(await redisInstance.get('action-kraken'));
   }
   async futureBuy(): Promise<void> {
@@ -68,6 +69,7 @@ export class Kraken implements Market {
       balanceType: 'futures',
       value: Number(result?.sendStatus?.orderEvents[0]?.amount),
     });
+    console.log('FutureBuy: ', result);
   }
   async futureSell(): Promise<void> {
     const result = await this.service.futureSell(this.amountToBuy, this.asset);
@@ -82,6 +84,7 @@ export class Kraken implements Market {
       balanceType: 'futures',
       value: Number(result?.sendStatus?.orderEvents[0]?.amount),
     });
+    console.log('FutureSell ', result);
   }
 
   async check(): Promise<void> {
@@ -91,6 +94,7 @@ export class Kraken implements Market {
 
   async checkFuture(): Promise<string> {
     const result = await this.service.checkFuture('usdt');
+    console.log('CheckFuture: ', result['usdt']);
     return result['usdt'];
   }
   async walletTransfer(redisBalance: string): Promise<void> {

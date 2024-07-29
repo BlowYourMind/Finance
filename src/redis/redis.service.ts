@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { randomUUID } from 'crypto';
 import Redis from 'ioredis';
 
 interface RedisBalance {
@@ -70,6 +71,51 @@ class RedisService {
     if (data?.key === 'action' && 'transactionId' in data) {
       return `${data?.key}-${data?.transactionId}`;
     }
+  }
+  async setTransactionRedis({
+    externalTransactionId,
+    market,
+    amountToBuy,
+    price,
+    asset,
+    status,
+    type,
+    balanceType,
+    value,
+  }): Promise<void> {
+    await this.set(
+      {
+        key: 'action',
+        // transactionId: randomUUID(),
+        transactionId: 'kraken',
+        value: {
+          response: {
+            [market]: [
+              {
+                externalTransactionId,
+                amount: Number(amountToBuy),
+                assetPrice: Number(price),
+                assetName: asset,
+                date: new Date(),
+                status,
+                type,
+              },
+            ],
+          },
+        },
+      },
+      300,
+    );
+    await this.set(
+      {
+        key: 'balance',
+        marketName: market,
+        balanceType,
+        asset: 'usdt',
+        value,
+      },
+      300,
+    );
   }
 }
 

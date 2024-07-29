@@ -50,7 +50,6 @@ export class CryptoService implements IAdapter {
   ): Promise<any> {}
   async getDepositAddress(
     asset: string,
-    method: string,
     isNew?: boolean,
   ): Promise<any> {}
   async getDepositMethods(asset: string): Promise<any> {}

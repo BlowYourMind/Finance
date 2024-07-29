@@ -10,7 +10,6 @@ import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
 import { randomUUID } from 'crypto';
 import { KrakenWallets } from './dto/kraken.dto';
-import { response } from 'express';
 
 colors.enable();
 
@@ -29,7 +28,7 @@ export class AppService {
     private readonly okexService: OkexService,
   ) {
     for (let market in this.markets) {
-      if (market === 'crypto' || market === 'kraken') {
+      if (market === 'crypto') {
         continue;
       }
       this.getMarketsBalance(market, 'check', 'spot');
@@ -41,7 +40,7 @@ export class AppService {
         amountToBuy: '0.02',
         asset: 'ETH',
         aproxStableValue: '16',
-        marketHigh: MarketType.BINANCE,
+        marketHigh: MarketType.KRAKEN,
         marketLow: MarketType.BINANCE,
       });
     }, 2000);
@@ -256,11 +255,17 @@ export class AppService {
       log(error);
     }
 
-    // await this.markets[marketHigh]['futureBuy'](
-    //   amountToBuy,
-    //   asset,
-    //   aproxStableValue,
-    // );
+    // market low to market high transaction
+    redisInstance.set(
+      {
+        key: 'TRANSFER',
+        transactionId: await this.markets[marketLow].transfer(
+          asset,
+          await this.markets[marketHigh].getDepositAddress(asset),
+        ).id,
+      },
+      300,
+    );
 
     // TODO: CHECK ASSET PRICE DELTA
 

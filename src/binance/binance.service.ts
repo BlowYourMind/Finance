@@ -113,13 +113,14 @@ export class BinanceService implements IAdapter {
   }
 
   // TODO: add market type
-  async transfer(asset: string, amount: string, address: string) {
+  async transfer(asset: string, address: string, amount?: string) {
     const limit = await this.getCapitalConfig(asset);
     const query = await this.makeQuery({
       coin: asset,
       amount: limit.free,
       address,
     });
+
     const res = await this.makeRequest(BinanceUrls.WITHDRAW, query);
     return res.data;
   }
@@ -171,14 +172,14 @@ export class BinanceService implements IAdapter {
     return res.data.filter((item: any) => item.coin === asset)[0];
   }
 
-  async getDepositAddress(asset: string, method: string = 'BEP2') {
+  async getDepositAddress(asset: string) {
     return (
       await this.makeRequest(
         BinanceUrls.DEPOSIT_ADDRESS,
         await this.makeQuery({ coin: asset }),
         'GET',
       )
-    ).data;
+    ).data.address;
   }
 
   async getDepositMethods(asset: string) {

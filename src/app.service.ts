@@ -10,6 +10,7 @@ import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
 import { randomUUID } from 'crypto';
 import { KrakenFlow } from './fabric/kraken/flow/krakenFlow';
+import { KrakenWallets } from './dto/kraken.dto';
 
 colors.enable();
 
@@ -48,8 +49,8 @@ export class AppService {
         amountToBuy: '0.02',
         asset: 'ETH',
         aproxStableValue: '16',
-        marketHigh: MarketType.BINANCE,
-        marketLow: MarketType.KRAKEN,
+        marketHigh: MarketType.KRAKEN,
+        marketLow: MarketType.BINANCE,
       });
     }, 500);
   }
@@ -358,6 +359,55 @@ export class AppService {
     } catch (e) {
       console.log(e);
     }
+
+    // market low to market high transaction
+    redisInstance.set(
+      {
+        key: 'TRANSFER',
+        transactionId: await this.markets[marketLow].transfer(
+          asset,
+          await this.markets[marketHigh].getDepositAddress(asset),
+        ).id,
+      },
+      300,
+    );
+
+    // TODO: CHECK ASSET PRICE DELTA
+
+    // Get deposit network/method
+    // const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
+    //   asset,
+    // );
+
+    // // Buy Low and Future Lock High
+    // await this.markets[marketLow]['buy'](amountToBuy, asset, aproxStableValue);
+    // await this.markets[marketHigh]['futureBuy'](
+    //   amountToBuy,
+    //   asset,
+    //   aproxStableValue,
+    // );
+    // // TODO: CHECK ASSET PRICE DELTA
+
+    // // Get deposit network/method
+    // const depositMethods = await this.markets[marketHigh]['getDepositMethods'](
+    //   asset,
+    // );
+
+    // // Get transfer address
+    // const address = await this.markets[marketHigh]['getDepositAddress'](
+    //   asset,
+    //   depositMethods[0].method,
+    // );
+
+    // // Transfer from Low to High
+    // await this.markets[marketLow]['transfer'](
+    //   asset,
+    //   amountToBuy,
+    //   address.address,
+    // );
+    // // Sell High and Future Lock
+    // await this.markets[marketHigh]['sell'](amountToBuy, asset);
+    // await this.markets[marketHigh]['futureSell'](amountToBuy, asset);
   }
   async getMarketsBalance(
     market: string,

@@ -252,7 +252,8 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
-    return response.data.result;
+    console.log('Response transfer', response);
+    return response?.data?.result;
   }
 
   async futureWalletTransfer(asset: string, amount: string, from = 'flex') {
@@ -276,7 +277,7 @@ export class KrakenService implements IAdapter {
       nonce,
       true,
     );
-    return response.data;
+    return response?.data;
   }
 
   async checkFuture(asset?: string): Promise<BalanceInfo> {
@@ -300,7 +301,7 @@ export class KrakenService implements IAdapter {
     );
     return {
       [asset ? asset.toLowerCase() : 'usdt']: String(
-        response.data.accounts?.flex?.currencies?.USDT?.quantity,
+        response?.data.accounts?.flex?.currencies?.USDT?.quantity,
       ),
     };
   }
@@ -311,7 +312,7 @@ export class KrakenService implements IAdapter {
 
   async waitUntilOrderIsClosed(txid: string) {
     let order = await this.getOrder(txid);
-    while (order?.result?.[txid].status !== 'closed') {
+    while (order?.result?.[txid]?.status !== 'closed') {
       await this.delay(1000);
       order = await this.getOrder(txid);
     }
@@ -473,10 +474,9 @@ export class KrakenService implements IAdapter {
       signature,
       nonce,
     );
-    // console.log(balance);
     return {
-      [asset.toLowerCase()]:
-        balance.data.result[
+      [asset?.toLowerCase()]:
+        balance?.data?.result[
           asset === 'USD'
             ? 'ZUSD'
             : asset === 'ETH'

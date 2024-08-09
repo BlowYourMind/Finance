@@ -10,4 +10,5 @@ interface Market {
   getDepositAddress?(): Promise<void>;
   getDepositMethods?(): Promise<void>;
   transfer?(): Promise<void>;
+  checkReceivedAsset?(): Promise<void>;
 }

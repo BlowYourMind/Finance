@@ -30,6 +30,7 @@ export class Binance implements Market {
       balanceType: 'spot',
       value: Number(this.amountToBuy) - Number(result?.cummulativeQuoteQty),
     });
+    console.log('Binance Spot Buy', result);
   }
   async transfer(): Promise<void> {
     const result = await this.service.transfer(
@@ -43,5 +44,6 @@ export class Binance implements Market {
       },
       300,
     );
+    console.log('Transfer Low Market', result);
   }
 }

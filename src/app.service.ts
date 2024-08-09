@@ -64,7 +64,7 @@ export class AppService {
       const redisBalance: string = await redisInstance.get(
         redisInstance.generateRedisKey({
           key: 'balance',
-          marketName: marketHigh,
+          marketName: marketLow,
           balanceType: 'spot',
           asset: 'usdt',
         }),
@@ -83,22 +83,16 @@ export class AppService {
         this.markets[marketHigh].service,
       );
       if (Number(redisBalance)) {
-        // high.walletTransfer(redisBalance);
-        // high.check();
-        // low.futureWalletTransfer();
-        // high.checkFuture();
-        // low.check();
-        // low.buy();
-        // setTimeout(() => {
-        //   low.sell();
-        // }, 200);
-        // setTimeout(() => {
-        //   low.check();
-        // }, 200);
+        console.log(redisBalance);
+        // high.futureSell();
+        low.buy();
         // high.futureBuy();
         // setTimeout(() => {
-        // high.futureSell();
-        // });
+        //   low.transfer();
+        // }, 1000);
+        // setTimeout(() => {
+        //   high.checkReceivedAsset();
+        // }, 2000);
       }
     } catch (e) {
       console.log(e);

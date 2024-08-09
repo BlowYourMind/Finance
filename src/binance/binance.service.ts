@@ -50,7 +50,7 @@ export class BinanceService implements IAdapter {
       type: 'MARKET',
       quoteOrderQty: amount,
     });
-    return (await this.makeRequest(BinanceUrls.ORDER, query)).data;
+    return (await this.makeRequest(BinanceUrls.ORDER, query))?.data;
   }
 
   async delay(ms: number) {

@@ -44,7 +44,7 @@ export class AppService {
     }
     setTimeout(() => {
       this.makeAction({
-        amountToBuy: '0.02',
+        amountToBuy: '0.01',
         asset: 'ETH',
         aproxStableValue: '16',
         marketHigh: MarketType.KRAKEN,

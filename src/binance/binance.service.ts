@@ -48,7 +48,8 @@ export class BinanceService implements IAdapter {
       symbol: asset + 'USDT',
       side: 'BUY',
       type: 'MARKET',
-      quoteOrderQty: amount,
+      quantity: amount,
+      // quoteOrderQty: amount, ||  if we plan to buy for all available balance
     });
     return (await this.makeRequest(BinanceUrls.ORDER, query))?.data;
   }

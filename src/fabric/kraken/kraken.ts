@@ -157,15 +157,15 @@ export class Kraken implements Market {
 
   async getInitialAssetState() {
     const result = await this.check();
-    return result[this.asset];
+    console.log('GetInitialAssetState', result);
+    return result['X' + this.asset];
   }
 
   async checkReceivedAsset() {
     let prevResult = Number(await this.getInitialAssetState());
-
     setInterval(async () => {
       const result = await this.check();
-      const currentResult = Number(result[this.asset]);
+      const currentResult = Number(result['X' + this.asset]);
       console.log('current:', currentResult, 'prev:', prevResult);
       if (currentResult !== prevResult) {
         await this.sell(currentResult); // need to set redis data

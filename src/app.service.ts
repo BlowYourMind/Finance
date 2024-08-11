@@ -88,13 +88,13 @@ export class AppService {
         console.log(redisBalance);
         // high.futureSell();
         low.buy();
-        // high.futureBuy();
-        // setTimeout(() => {
-        //   low.transfer();
-        // }, 1000);
-        // setTimeout(() => {
-        //   high.checkReceivedAsset();
-        // }, 2000);
+        high.futureBuy();
+        setTimeout(() => {
+          low.transfer();
+        }, 1000);
+        setTimeout(() => {
+          high.checkReceivedAsset();
+        }, 2000);
       }
     } catch (e) {
       console.log(e);

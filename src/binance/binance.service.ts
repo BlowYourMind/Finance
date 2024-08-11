@@ -49,7 +49,7 @@ export class BinanceService implements IAdapter {
       side: 'BUY',
       type: 'MARKET',
       // quantity: amount,
-      quoteOrderQty: amount, // ||  if we plan to buy for all available balance
+      quoteOrderQty: '16', // ||  if we plan to buy for all available balance
     });
     return (await this.makeRequest(BinanceUrls.ORDER, query))?.data;
   }
@@ -160,7 +160,7 @@ export class BinanceService implements IAdapter {
         'GET',
         true,
       )
-    ).data.filter((item: any) => item.asset === 'BNFCR'); // asset changed to BNFCR
+    )?.data.filter((item: any) => item.asset === 'BNFCR'); // asset changed to BNFCR
     return { ['bnfcr']: res[0] ? res[0].availableBalance : 0 }; // asset.toLowerCase() changed to 'bnfcr'
   }
 

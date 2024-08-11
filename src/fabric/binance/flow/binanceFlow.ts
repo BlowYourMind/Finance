@@ -1,6 +1,7 @@
 import { MarketFactory } from 'src/fabric/market.factory';
 import { Binance } from '../binance';
 import { BinanceService } from 'src/binance/binance.service';
+import { Market } from 'src/interfaces/market.interface';
 
 export class BinanceFlow extends MarketFactory {
   factoryMethod(

@@ -1,4 +1,6 @@
-interface Market {
+import { KrakenService } from 'src/kraken/kraken.service';
+
+export interface Market {
   buy?(): Promise<void>;
   sell?(): Promise<void>;
   futureBuy?(): Promise<void>;
@@ -9,6 +11,6 @@ interface Market {
   futureWalletTransfer?(): Promise<void>;
   getDepositAddress?(): Promise<void>;
   getDepositMethods?(): Promise<void>;
-  transfer?(): Promise<void>;
+  transfer?(krakenService: KrakenService): Promise<void>;
   checkReceivedAsset?(): Promise<void>;
 }

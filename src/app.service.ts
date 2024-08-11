@@ -10,6 +10,7 @@ import { log } from 'console';
 import { MarketType } from './dto/marketType.dto';
 import { KrakenFlow } from './fabric/kraken/flow/krakenFlow';
 import { BinanceFlow } from './fabric/binance/flow/binanceFlow';
+import { Market } from './interfaces/market.interface';
 
 colors.enable();
 
@@ -72,16 +73,16 @@ export class AppService {
       const low: Market = new this.markets[marketLow].factory().getMarket(
         amountToBuy,
         asset,
-        redisBalance,
         aproxStableValue,
+        redisBalance,
         this.markets[marketLow].service,
       );
 
       const high: Market = new this.markets[marketHigh].factory().getMarket(
         amountToBuy,
         asset,
-        redisBalance,
         aproxStableValue,
+        redisBalance,
         this.markets[marketHigh].service,
       );
       if (Number(redisBalance)) {
@@ -90,7 +91,7 @@ export class AppService {
         low.buy();
         high.futureBuy();
         setTimeout(() => {
-          low.transfer();
+          low.transfer(this.krakenService);
         }, 1000);
         setTimeout(() => {
           high.checkReceivedAsset();

@@ -1,4 +1,6 @@
 import { BinanceService } from 'src/binance/binance.service';
+import { Market } from 'src/interfaces/market.interface';
+import { KrakenService } from 'src/kraken/kraken.service';
 import { ActionType, redisInstance } from 'src/redis/redis.service';
 
 export class Binance implements Market {
@@ -35,10 +37,10 @@ export class Binance implements Market {
     });
     console.log('Binance Spot Buy', result);
   }
-  async transfer(): Promise<void> {
+  async transfer(krakenService: KrakenService): Promise<void> {
     const result = await this.service.transfer(
       this.asset,
-      await this.service.getDepositAddress(this.asset),
+      await krakenService.getDepositAddress(this.asset),
     );
     redisInstance.set(
       {

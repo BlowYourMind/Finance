@@ -1,4 +1,5 @@
 import { KrakenWallets } from 'src/dto/kraken.dto';
+import { Market } from 'src/interfaces/market.interface';
 import { KrakenService } from 'src/kraken/kraken.service';
 import { ActionType, redisInstance } from 'src/redis/redis.service';
 
@@ -88,9 +89,10 @@ export class Kraken implements Market {
     console.log('FutureSell ', result);
   }
 
-  async check(): Promise<void> {
+  async check(): Promise<any> {
     const result = await this.service.check(this.asset || 'usdt');
     console.log('Spot Balance ---', result);
+    return result;
   }
 
   async checkFuture(): Promise<string> {
@@ -158,14 +160,14 @@ export class Kraken implements Market {
   async getInitialAssetState() {
     const result = await this.check();
     console.log('GetInitialAssetState', result);
-    return result['X' + this.asset];
+    return result[this.asset.toLowerCase()];
   }
 
   async checkReceivedAsset() {
     let prevResult = Number(await this.getInitialAssetState());
     setInterval(async () => {
       const result = await this.check();
-      const currentResult = Number(result['X' + this.asset]);
+      const currentResult = Number(result[this.asset.toLowerCase()]);
       console.log('current:', currentResult, 'prev:', prevResult);
       if (currentResult !== prevResult) {
         await this.sell(currentResult); // need to set redis data

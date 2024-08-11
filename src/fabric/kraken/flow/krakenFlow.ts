@@ -6,9 +6,16 @@ export class KrakenFlow extends MarketFactory {
   factoryMethod(
     amountToBuy: string,
     asset: string,
+    redisBalance: string,
     aproxStableValue: string,
     service: KrakenService,
   ): Market {
-    return new Kraken(amountToBuy, asset, aproxStableValue, service);
+    return new Kraken(
+      amountToBuy,
+      asset,
+      redisBalance,
+      aproxStableValue,
+      service,
+    );
   }
 }

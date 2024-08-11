@@ -72,6 +72,7 @@ export class AppService {
       const low: Market = new this.markets[marketLow].factory().getMarket(
         amountToBuy,
         asset,
+        redisBalance,
         aproxStableValue,
         this.markets[marketLow].service,
       );
@@ -79,6 +80,7 @@ export class AppService {
       const high: Market = new this.markets[marketHigh].factory().getMarket(
         amountToBuy,
         asset,
+        redisBalance,
         aproxStableValue,
         this.markets[marketHigh].service,
       );

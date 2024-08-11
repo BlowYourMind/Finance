@@ -5,22 +5,23 @@ export class Binance implements Market {
   private amountToBuy: string;
   private asset: string;
   private aproxStableValue: string;
-  private redisSporBalance: Promise<string>;
+  private redisBalance: string;
 
   constructor(
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
+    redisBalance: string,
     private readonly service: BinanceService,
   ) {
     this.aproxStableValue = aproxStableValue;
     this.amountToBuy = amountToBuy;
     this.asset = asset;
-    this.redisSporBalance = redisInstance.get('balance-binance-spot-usdt');
+    this.redisBalance = redisBalance;
   }
 
   async buy(): Promise<void> {
-    const result = await this.service.buy(this.amountToBuy, this.asset);
+    const result = await this.service.buy(this.redisBalance, this.asset);
     await redisInstance.setTransactionRedis({
       externalTransactionId: result?.orderId,
       market: 'binance',
@@ -30,8 +31,7 @@ export class Binance implements Market {
       status: result?.status,
       type: ActionType.SPOT_BUY,
       balanceType: 'spot',
-      value:
-        Number(this.redisSporBalance) - Number(result?.cummulativeQuoteQty),
+      value: Number(this.redisBalance) - Number(result?.cummulativeQuoteQty),
     });
     console.log('Binance Spot Buy', result);
   }

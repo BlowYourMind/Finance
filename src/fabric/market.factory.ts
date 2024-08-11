@@ -6,6 +6,7 @@ export abstract class MarketFactory {
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
+    redisBalance: string,
     service: KrakenService | BinanceService,
   ): Market;
 
@@ -13,12 +14,14 @@ export abstract class MarketFactory {
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
+    redisBalance: string,
     service: KrakenService | BinanceService,
   ): Market {
     const market = this.factoryMethod(
       amountToBuy,
       asset,
       aproxStableValue,
+      redisBalance,
       service,
     );
     return market;

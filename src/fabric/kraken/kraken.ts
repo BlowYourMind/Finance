@@ -6,16 +6,19 @@ export class Kraken implements Market {
   private amountToBuy: string;
   private asset: string;
   private aproxStableValue: string;
+  private redisBalance: string;
 
   constructor(
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
+    redisBalance: string,
     private readonly service: KrakenService,
   ) {
     this.aproxStableValue = aproxStableValue;
     this.amountToBuy = amountToBuy;
     this.asset = asset;
+    this.redisBalance = redisBalance;
   }
 
   async buy(): Promise<void> {

@@ -6,9 +6,16 @@ export class BinanceFlow extends MarketFactory {
   factoryMethod(
     amountToBuy: string,
     asset: string,
+    redisBalance: string,
     aproxStableValue: string,
     service: BinanceService,
   ): Market {
-    return new Binance(amountToBuy, asset, aproxStableValue, service);
+    return new Binance(
+      amountToBuy,
+      asset,
+      redisBalance,
+      aproxStableValue,
+      service,
+    );
   }
 }

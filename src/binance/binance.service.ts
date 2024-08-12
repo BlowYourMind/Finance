@@ -49,7 +49,7 @@ export class BinanceService implements IAdapter {
       side: 'BUY',
       type: 'MARKET',
       // quantity: amount,
-      quoteOrderQty: '16', // ||  if we plan to buy for all available balance
+      quoteOrderQty: amount, // ||  if we plan to buy for all available balance
     });
     return (await this.makeRequest(BinanceUrls.ORDER, query))?.data;
   }

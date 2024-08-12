@@ -86,9 +86,7 @@ export class AppService {
         this.markets[marketHigh].service,
       );
       if (Number(redisBalance)) {
-        this.krakenService.getDepositMethods(asset);
-        // console.log(redisBalance);
-        // high.futureSell();
+        // high.sell()
         low.buy();
         high.futureBuy();
         setTimeout(() => {

@@ -63,7 +63,7 @@ deploy-ci:
         name: gitlab-runner 
         url: https://сointrade.com
     tags:
-      - cointrade-runner
+      - deploy-slave
 
 
 

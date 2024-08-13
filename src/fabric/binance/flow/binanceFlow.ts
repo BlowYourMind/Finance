@@ -1,17 +1,17 @@
 import { MarketFactory } from 'src/fabric/market.factory';
-import { Kraken } from '../kraken';
-import { KrakenService } from 'src/kraken/kraken.service';
+import { Binance } from '../binance';
+import { BinanceService } from 'src/binance/binance.service';
 import { Market } from 'src/interfaces/market.interface';
 
-export class KrakenFlow extends MarketFactory {
+export class BinanceFlow extends MarketFactory {
   factoryMethod(
     amountToBuy: string,
     asset: string,
     redisBalance: string,
     aproxStableValue: string,
-    service: KrakenService,
+    service: BinanceService,
   ): Market {
-    return new Kraken(
+    return new Binance(
       amountToBuy,
       asset,
       redisBalance,

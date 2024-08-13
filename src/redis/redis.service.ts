@@ -86,8 +86,7 @@ class RedisService {
     await this.set(
       {
         key: 'action',
-        // transactionId: randomUUID(),
-        transactionId: 'kraken',
+        transactionId: randomUUID(),
         value: {
           response: {
             [market]: [

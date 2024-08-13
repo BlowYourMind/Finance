@@ -48,9 +48,10 @@ export class BinanceService implements IAdapter {
       symbol: asset + 'USDT',
       side: 'BUY',
       type: 'MARKET',
-      quoteOrderQty: amount,
+      // quantity: amount,
+      quoteOrderQty:amount, // ||  if we plan to buy for all available balance
     });
-    return (await this.makeRequest(BinanceUrls.ORDER, query)).data;
+    return (await this.makeRequest(BinanceUrls.ORDER, query))?.data;
   }
 
   async delay(ms: number) {
@@ -159,7 +160,7 @@ export class BinanceService implements IAdapter {
         'GET',
         true,
       )
-    ).data.filter((item: any) => item.asset === 'BNFCR'); // asset changed to BNFCR
+    )?.data.filter((item: any) => item.asset === 'BNFCR'); // asset changed to BNFCR
     return { ['bnfcr']: res[0] ? res[0].availableBalance : 0 }; // asset.toLowerCase() changed to 'bnfcr'
   }
 

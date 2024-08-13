@@ -169,7 +169,8 @@ export class KrakenService implements IAdapter {
         nonce,
       )
     ).data.result;
-    return response.filter((elem) => elem.method === 'ETH - Polygon (Unified)');
+    console.log(response);
+    return response.filter((elem) => elem.method === 'ETH - Arbitrum Nova (Unified)');
   }
 
   async getDepositAddress(asset: string) {

@@ -1,4 +1,5 @@
 import { KrakenWallets } from 'src/dto/kraken.dto';
+import { Market } from 'src/interfaces/market.interface';
 import { KrakenService } from 'src/kraken/kraken.service';
 import { ActionType, redisInstance } from 'src/redis/redis.service';
 
@@ -6,16 +7,19 @@ export class Kraken implements Market {
   private amountToBuy: string;
   private asset: string;
   private aproxStableValue: string;
+  private redisBalance: string;
 
   constructor(
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
+    redisBalance: string,
     private readonly service: KrakenService,
   ) {
     this.aproxStableValue = aproxStableValue;
     this.amountToBuy = amountToBuy;
     this.asset = asset;
+    this.redisBalance = redisBalance;
   }
 
   async buy(): Promise<void> {
@@ -37,11 +41,9 @@ export class Kraken implements Market {
     console.log('SpotBuy: ', result);
     console.log(await redisInstance.get('action-kraken'));
   }
-  async sell(): Promise<void> {
-    const result = await this.service.sell(
-      this.amountToBuy,
-      this.asset.toUpperCase(),
-    );
+  async sell(amountSell?: any): Promise<void> {
+    const amount = amountSell ? amountSell : this.amountToBuy;
+    const result = await this.service.sell(amount, this.asset.toUpperCase());
     await redisInstance.setTransactionRedis({
       externalTransactionId: result?.txid,
       market: 'kraken',
@@ -53,8 +55,7 @@ export class Kraken implements Market {
       balanceType: 'spot',
       value: result?.amount[0],
     });
-    console.log('SpotSell: ', result?.txid);
-    console.log(await redisInstance.get('action-kraken'));
+    console.log('SpotSell: ', result);
   }
   async futureBuy(): Promise<void> {
     const result = await this.service.futureBuy(this.amountToBuy, this.asset);
@@ -71,8 +72,9 @@ export class Kraken implements Market {
     });
     console.log('FutureBuy: ', result);
   }
-  async futureSell(): Promise<void> {
-    const result = await this.service.futureSell(this.amountToBuy, this.asset);
+  async futureSell(amountToSell?: any): Promise<void> {
+    const amount = amountToSell ? amountToSell : this.amountToBuy;
+    const result = await this.service.futureSell(amount, this.asset);
     await redisInstance.setTransactionRedis({
       externalTransactionId: result?.sendStatus?.order_id,
       market: 'kraken',
@@ -87,9 +89,10 @@ export class Kraken implements Market {
     console.log('FutureSell ', result);
   }
 
-  async check(): Promise<void> {
-    const result = await this.service.check('usdt');
+  async check(): Promise<any> {
+    const result = await this.service.check(this.asset || 'usdt');
     console.log('Spot Balance ---', result);
+    return result;
   }
 
   async checkFuture(): Promise<string> {
@@ -153,4 +156,24 @@ export class Kraken implements Market {
   async getDepositAddress(): Promise<void> {}
 
   async getDepositMethods(): Promise<void> {}
+
+  async getInitialAssetState() {
+    const result = await this.check();
+    console.log('GetInitialAssetState', result);
+    return result[this.asset.toLowerCase()];
+  }
+
+  async checkReceivedAsset() {
+    let prevResult = Number(await this.getInitialAssetState());
+    setInterval(async () => {
+      const result = await this.check();
+      const currentResult = Number(result[this.asset.toLowerCase()]);
+      console.log('current:', currentResult, 'prev:', prevResult);
+      if (currentResult !== prevResult) {
+        await this.sell(currentResult); // need to set redis data
+        await this.futureSell(); // need to set redis data
+      }
+      prevResult = currentResult;
+    }, 30000);
+  }
 }

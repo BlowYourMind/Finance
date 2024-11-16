@@ -1,11 +1,13 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { firstValueFrom } from 'rxjs';
 import { BalanceInfo } from 'src/dto/balance.dto';
 import * as colors from 'colors';
 import { CatchAll } from 'src/try.decorator';
 import { log } from 'console';
 import { IAdapter } from 'src/interfaces/adapter.interface';
+import * as ccxt from 'ccxt';
+
 colors.enable();
 
 @CatchAll((err, ctx) => {
@@ -15,7 +17,34 @@ colors.enable();
 })
 @Injectable()
 export class CryptoService implements IAdapter {
-  constructor(private readonly httpService: HttpService) {}
+  private spotExchange: ccxt.Exchange;
+  private futureExchange: ccxt.Exchange;
+  constructor(private readonly httpService: HttpService) {
+    const apiKey = process.env.CRYPTOCOM_API_KEY;
+    const secretKey = process.env.CRYPTOCOM_SECRET_KEY;
+    this.spotExchange = new ccxt.cryptocom({
+      apiKey,
+      secret: secretKey,
+      enableRateLimit: true,
+      timeout: 30000,
+      options: {
+        defaultType: 'spot',
+        adjustForTimeDifference: true,
+      },
+    });
+
+    // Initialize futures exchange
+    this.futureExchange = new ccxt.cryptocom({
+      apiKey,
+      secret: secretKey,
+      enableRateLimit: true,
+      timeout: 30000,
+      options: {
+        defaultType: 'future',
+        adjustForTimeDifference: true,
+      },
+    });
+  }
   async futureBuy(amount: string, asset: string) {
     console.log('bought');
     return;
@@ -29,15 +58,62 @@ export class CryptoService implements IAdapter {
     console.log('sold');
     return;
   }
-  async check(): Promise<BalanceInfo> {
-    console.log('check');
-    return {
-      eth: '0.00',
-      usdt: '0.00000000',
-    };
+  async check(asset: string): Promise<any> {
+    try {
+      const normalizedAsset = asset.toUpperCase();
+      await this.spotExchange.loadMarkets();
+      const balance = await this.spotExchange.fetchBalance();
+
+      return {
+        asset: normalizedAsset,
+        free: balance[normalizedAsset].free || 0,
+        used: balance[normalizedAsset].used || 0,
+        total: balance[normalizedAsset].total || 0,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      throw error;
+    }
   }
-  checkFuture(asset?: string): never {
-    throw new Error('Not exist');
+
+  async checkFuture(asset: string): Promise<any> {
+    try {
+      const normalizedAsset = asset.toUpperCase();
+      await this.futureExchange.loadMarkets();
+      const balance = await this.futureExchange.fetchBalance({
+        type: 'future',
+      });
+      const positions =
+        (await this.futureExchange.fetchPositions([
+          `${normalizedAsset}/USDT`,
+        ])) || [];
+      const unrealizedPnL = positions.reduce((total, position) => {
+        return total + (position.unrealizedPnl || 0);
+      }, 0);
+
+      return {
+        asset: normalizedAsset,
+        balance: {
+          total: balance[normalizedAsset]?.total || 0,
+          free: balance[normalizedAsset]?.free || 0,
+          used: balance[normalizedAsset]?.used || 0,
+        },
+        positions: positions.map((position) => ({
+          symbol: position.symbol,
+          size: position.contracts || 0,
+          notional: position.notional || 0,
+          side: position.side,
+          entryPrice: position.entryPrice || 0,
+          unrealizedPnL: position.unrealizedPnl || 0,
+          leverage: position.leverage || 1,
+          liquidationPrice: position.liquidationPrice || 0,
+        })),
+        unrealizedPnL,
+        timestamp: new Date().toISOString(),
+      };
+    } catch (error) {
+      throw error;
+    }
   }
   async futureSell(amount: string, asset: string): Promise<any> {}
   async delay(ms: number) {
@@ -48,9 +124,6 @@ export class CryptoService implements IAdapter {
     amount: string,
     address: string,
   ): Promise<any> {}
-  async getDepositAddress(
-    asset: string,
-    isNew?: boolean,
-  ): Promise<any> {}
+  async getDepositAddress(asset: string, isNew?: boolean): Promise<any> {}
   async getDepositMethods(asset: string): Promise<any> {}
 }

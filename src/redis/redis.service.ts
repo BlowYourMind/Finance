@@ -43,8 +43,8 @@ class RedisService {
   redisClient: Redis;
   constructor() {
     this.redisClient = new Redis({
-      host: '38.242.203.151',
-      password: 'andjf8*d@GS',
+      host: '127.0.0.1',
+      password: '',
       port: 6379,
     });
   }

@@ -3,4 +3,5 @@ export enum MarketType {
   KRAKEN = 'kraken',
   CRYPTO = 'crypto',
   OKEX = 'okex',
+  KUCOIN = 'kucoin',
 }

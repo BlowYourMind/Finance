@@ -11,29 +11,36 @@ import { MarketType } from './dto/marketType.dto';
 import { KrakenFlow } from './fabric/kraken/flow/krakenFlow';
 import { BinanceFlow } from './fabric/binance/flow/binanceFlow';
 import { Market } from './interfaces/market.interface';
+import { KucoinService } from './kucoin/kucoin.service';
+import { KucoinFlow } from './fabric/kucoin/flow/kucoinFlow';
 
 colors.enable();
 
 @Injectable()
 export class AppService {
   markets = {
-    binance: {
-      service: this.binanceService,
-      factory: BinanceFlow,
-    },
-    kraken: {
-      service: this.krakenService,
-      factory: KrakenFlow,
-    },
-    crypto: {
-      service: this.cryptoService,
-      factory: '',
+    // binance: {
+    //   service: this.binanceService,
+    //   factory: BinanceFlow,
+    // },
+    // kraken: {
+    //   service: this.krakenService,
+    //   factory: KrakenFlow,
+    // },
+    // crypto: {
+    //   service: this.cryptoService,
+    //   factory: '',
+    // },
+    kucoin: {
+      service: this.kuCoinService,
+      factory: KucoinFlow,
     },
   };
   constructor(
     private readonly binanceService: BinanceService,
     private readonly krakenService: KrakenService,
     private readonly cryptoService: CryptoService,
+    private readonly kuCoinService: KucoinService,
     private readonly okexService: OkexService,
   ) {
     for (let market in this.markets) {
@@ -42,14 +49,14 @@ export class AppService {
       }
       this.getMarketsBalance(market, 'check', 'spot');
       this.getMarketsBalance(market, 'checkFuture', 'futures');
-    }
+    } 
     setTimeout(() => {
       this.makeAction({
         amountToBuy: '0.01',
         asset: 'ETH',
         aproxStableValue: '16',
-        marketHigh: MarketType.KRAKEN,
-        marketLow: MarketType.BINANCE,
+        marketHigh: MarketType.KUCOIN,
+        marketLow: MarketType.KUCOIN,
       });
     }, 500);
   }
@@ -60,7 +67,23 @@ export class AppService {
     asset,
     aproxStableValue,
   }: ActionInfo) {
-    // Buy Low and Future Lock High
+    const redisBalance: string = await redisInstance.get(
+      redisInstance.generateRedisKey({
+        key: 'balance',
+        marketName: marketLow,
+        balanceType: 'spot',
+        asset: 'usdt',
+      }),
+    );
+    const low: Market = new this.markets[marketLow].factory().getMarket(
+      amountToBuy,
+      asset,
+      aproxStableValue,
+      redisBalance,
+      this.markets[marketLow].service,
+    );
+    low.sell();
+    return;
     try {
       const redisBalance: string = await redisInstance.get(
         redisInstance.generateRedisKey({
@@ -108,7 +131,7 @@ export class AppService {
   ) {
     await this.markets[market].service[method](asset).then((response: any) => {
       if (response) {
-        const asset = Object.keys(response)[0];
+        const asset = Object.keys(response)[0].toLowerCase();
         this.initialiseRedisBalance(
           asset,
           type,

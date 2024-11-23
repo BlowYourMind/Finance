@@ -24,16 +24,43 @@ export class Kucoin implements Market {
   }
 
   async buy(): Promise<void> {
-    const response = await this.service.buy(
+    const result = await this.service.buy(
       this.amountToBuy,
       this.asset,
       this.aproxStableValue,
     );
-    console.log(response);
+    await redisInstance.setTransactionRedis({
+      externalTransactionId: result?.id,
+      market: 'kucoin',
+      amountToBuy: this.amountToBuy,
+      price: result?.price,
+      asset: 'usdt',
+      status: result?.status,
+      type: ActionType.SPOT_BUY,
+      balanceType: 'spot',
+      value:
+        Number(this.redisBalance) -
+        (Number(result?.cost) + Number(result?.fee.cost)),
+    });
+    console.log(result);
   }
-  async sell(amountSell?: any): Promise<void> {
-    const response = await this.service.sell("0.005", this.asset);
-    console.log(response);
+  async sell(): Promise<void> {
+    const result = await this.service.sell(this.asset);
+    await redisInstance.setTransactionRedis({
+      externalTransactionId: result?.id,
+      market: 'kucoin',
+      amountToBuy: result?.amount,
+      price: result?.price,
+      asset: 'usdt',
+      status: result?.status,
+      type: ActionType.SPOT_SELL,
+      balanceType: 'spot',
+      value:
+        Number(this.redisBalance) +
+        Number(result.cost) -
+        Number(result.fee.cost),
+    });
+    console.log(result);
   }
   async transfer(krakenService: KrakenService): Promise<void> {}
 }

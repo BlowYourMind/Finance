@@ -43,7 +43,7 @@ export class KucoinService implements IAdapter {
       const response = await this.exchange.fetchBalance({
         type: 'trade',
       });
-      return { [formattedAsset]: response.free[formattedAsset] };
+      return { [formattedAsset.toLowerCase()]: response.free[formattedAsset] };
     } catch (error) {
       throw new Error(error);
     }
@@ -54,7 +54,7 @@ export class KucoinService implements IAdapter {
       const response = await this.futuresExchange.fetchBalance({
         type: 'main',
       });
-      return { [formattedAsset]: response.free[formattedAsset] };
+      return { [formattedAsset.toLowerCase()]: response.free[formattedAsset] };
     } catch (error) {
       throw new Error(error);
     }
@@ -84,20 +84,32 @@ export class KucoinService implements IAdapter {
         'buy',
         Number(amount),
       );
-      return response;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const fullOrder = await this.exchange.fetchOrder(
+        response.id,
+        asset + '/USDT',
+      );
+      return fullOrder;
     } catch (error) {
       throw new Error(error);
     }
   }
-  async sell(amount: string, asset: string): Promise<void | any> {
+  async sell(asset: string): Promise<void | any> {
+    console.log('Selling', asset);
+    const amountToSell = Object.values(await this.check(asset))[0];
     try {
       const response = await this.exchange.createOrder(
         asset + '/USDT',
         'market',
         'sell',
-        Number(amount),
+        Number(amountToSell),
       );
-      return response;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      const fullOrder = await this.exchange.fetchOrder(
+        response.id,
+        asset + '/USDT',
+      );
+      return fullOrder;
     } catch (error) {
       throw new Error(error);
     }

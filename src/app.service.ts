@@ -49,10 +49,10 @@ export class AppService {
       }
       this.getMarketsBalance(market, 'check', 'spot');
       this.getMarketsBalance(market, 'checkFuture', 'futures');
-    } 
+    }
     setTimeout(() => {
       this.makeAction({
-        amountToBuy: '0.01',
+        amountToBuy: '0.005',
         asset: 'ETH',
         aproxStableValue: '16',
         marketHigh: MarketType.KUCOIN,
@@ -82,7 +82,9 @@ export class AppService {
       redisBalance,
       this.markets[marketLow].service,
     );
-    low.sell();
+    if (Number(redisBalance)) {
+      low.sell();
+    }
     return;
     try {
       const redisBalance: string = await redisInstance.get(
@@ -149,6 +151,7 @@ export class AppService {
     key: string,
     value: string,
   ): Promise<void> {
+    console.log(key, marketName, balanceType, asset, value);
     await redisInstance.set(
       { key, marketName, balanceType, asset, value },
       300,

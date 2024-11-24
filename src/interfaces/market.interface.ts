@@ -9,8 +9,8 @@ export interface Market {
   checkFuture?(): Promise<string>;
   walletTransfer?(redisBalance: string): Promise<void>;
   futureWalletTransfer?(): Promise<void>;
-  getDepositAddress?(): Promise<void>;
+  getDepositAddress?(asset:string): Promise<void>;
   getDepositMethods?(): Promise<void>;
-  transfer?(krakenService: KrakenService): Promise<void>;
+  transfer?(highMarket: Market): Promise<void>;
   checkReceivedAsset?(): Promise<void>;
 }

@@ -101,15 +101,30 @@ export class KucoinService implements IAdapter {
       throw new Error(error);
     }
   }
-  async futureBuy(
-    amount: string,
-    asset: string,
-    approxStableValue: string,
-  ): Promise<void | any> {
+  async calculateContractSize(amount: string, asset: string) {
     try {
+      let contractSize = 1;
+
+      const marketFetchResponse = await this.futuresExchange.fetchMarkets({
+        symbol: asset + 'USDTM',
+      });
+
+      marketFetchResponse.forEach((element) => {
+        if (element.info.symbol === asset + 'USDTM') {
+          contractSize = element.contractSize;
+        }
+      });
       const amountNum = parseFloat(amount);
-      const contractSize = 0.1;
       const contracts = Math.ceil(amountNum / contractSize);
+      return contracts;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+  async futureBuy(amount: string, asset: string): Promise<void | any> {
+    try {
+      const contracts = await this.calculateContractSize(amount, asset);
+
       if (contracts < 1) {
         throw new Error('Amount too small. Minimum is 1 contract (0.1 ETH)');
       }
@@ -129,17 +144,121 @@ export class KucoinService implements IAdapter {
       throw new Error(error);
     }
   }
-  futureSell(amount: string, asset: string): Promise<void | any> {
-    throw new Error('Method not implemented.');
+
+  async futureSell(asset: string): Promise<void | any> {
+    const amountToSell = await this.futuresExchange.fetchPosition(
+      asset + 'USDTM',
+    );
+    const response = await this.futuresExchange.createOrder(
+      asset + 'USDTM',
+      'market',
+      'sell',
+      amountToSell.contracts,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    const fullOrder = await this.futuresExchange.fetchOrder(
+      response.id,
+      asset + 'USDTM',
+    );
+    return fullOrder;
   }
-  delay(ms: number): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
-  transfer(asset: string, amount: string, address: string): Promise<any> {
-    throw new Error('Method not implemented.');
+  async transfer(asset: string, address: string): Promise<any> {
+    try {
+      const bestNetwork = await this.getBestNetwork(asset);
+      const params: any = {
+        network: bestNetwork.networkInfo.id,
+      };
+      const balances = await this.exchange.fetchBalance();
+      const availableAmount = balances.free[asset.toUpperCase()];
+      await this.exchange.transfer(
+        asset.toUpperCase(),
+        availableAmount,
+        'trade',
+        'main',
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      return await this.exchange.withdraw(
+        asset.toUpperCase(),
+        availableAmount,
+        '0x9d58abddb0b70bfca5a1cd69cffa04fb9e0d4475',
+        params,
+      );
+    } catch (error) {
+      throw new Error(error);
+    }
   }
 
-  getDepositAddress(asset: string, isNew?: boolean): Promise<any> {
+  async getBestNetwork(asset: string): Promise<any> {
+    const currencies = await this.exchange.fetchCurrencies();
+    const currencyInfo = currencies[asset.toUpperCase()];
+    const networks = currencyInfo.networks;
+    const availableNetworks = Object.entries(networks)
+      .filter(([_, info]) => {
+        return (
+          info.limits &&
+          info.limits.deposit &&
+          info.limits.deposit.min !== undefined
+        );
+      })
+      .map(([network, info]) => ({
+        network,
+        fee: info.fee,
+        networkInfo: info,
+        depositMinSize: info.limits.deposit.min,
+      }));
+    return availableNetworks.sort((a, b) => a.fee - b.fee)[1] || 'ETH';
+  }
+
+  async getDepositAddress(asset: string): Promise<any> {
+    try {
+      const bestNetwork = await this.getBestNetwork(asset);
+      const params: any = {
+        network: bestNetwork.networkInfo.id,
+      };
+      try {
+        const existingAddress = await this.exchange.fetchDepositAddress(
+          asset,
+          params,
+        );
+        if (existingAddress && existingAddress.address) {
+          return existingAddress.address;
+        }
+        return await this.exchange.createDepositAddress(asset);
+      } catch (fetchError) {
+        const newAddress = await this.exchange.createDepositAddress(
+          asset,
+          params,
+        );
+        return newAddress.address;
+      }
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+  async checkReceivedAsset(asset: string) {
+    const startBalance = await this.getInitialBalance(asset);
+    const interval = setInterval(async () => {
+      try {
+        const currentBalance = await this.getInitialBalance(asset);
+        console.log('Current balance:', currentBalance);
+
+        if (currentBalance > startBalance) {
+          clearInterval(interval);
+        }
+      } catch (error) {
+        throw new Error(error);
+      }
+    }, 30000); // 30 seconds
+    return { success: true };
+  }
+  async getInitialBalance(asset: string): Promise<number> {
+    const balances = await this.exchange.fetchBalance();
+    return balances.total[asset.toUpperCase()] || 0;
+  }
+  // не очень понятно как сравнивать нетворки которые использует биржа,
+  // например на бинансе для депозита нет trc20 а на kucoin есть и является самым дешевым способом
+  delay(ms: number): Promise<any> {
     throw new Error('Method not implemented.');
   }
   getDepositMethods(asset: string): Promise<any> {

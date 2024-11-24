@@ -83,7 +83,7 @@ export class AppService {
         asset: 'usdt',
       }),
     );
-    console.log(redisFuturesBalance)
+    console.log(redisFuturesBalance);
     const low: Market = new this.markets[marketLow].factory().getMarket(
       amountToBuy,
       asset,
@@ -92,8 +92,16 @@ export class AppService {
       redisFuturesBalance,
       this.markets[marketLow].service,
     );
-    // if (Number(redisBalance)) {
-    low.futureBuy();
+    const high: Market = new this.markets[marketLow].factory().getMarket(
+      amountToBuy,
+      asset,
+      aproxStableValue,
+      redisSpotBalance,
+      redisFuturesBalance,
+      this.markets[marketLow].service,
+    ); // if (Number(redisBalance)) {
+    // low.buy();
+    low.transfer(high);
     // }
     return;
     try {
@@ -125,7 +133,7 @@ export class AppService {
         low.buy();
         high.futureBuy();
         setTimeout(() => {
-          low.transfer(this.krakenService);
+          low.transfer(high);
         }, 1000);
         setTimeout(() => {
           high.checkReceivedAsset();

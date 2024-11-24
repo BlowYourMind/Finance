@@ -40,10 +40,10 @@ export class Binance implements Market {
     });
     console.log('Binance Spot Buy', result);
   }
-  async transfer(krakenService: KrakenService): Promise<void> {
+  async transfer(highMarket: any): Promise<void> {
     const result = await this.service.transfer(
       this.asset,
-      await krakenService.getDepositAddress(this.asset),
+      await highMarket.getDepositAddress(this.asset),
     );
     redisInstance.set(
       {

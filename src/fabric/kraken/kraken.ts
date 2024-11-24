@@ -8,14 +8,16 @@ export class Kraken implements Market {
   private asset: string;
   private aproxStableValue: string;
   private redisBalance: string;
-
+  private redisFuturesBalance: string;
   constructor(
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
     redisBalance: string,
+    redisFuturesBalance: string,
     private readonly service: KrakenService,
   ) {
+    this.redisFuturesBalance = redisFuturesBalance;
     this.aproxStableValue = aproxStableValue;
     this.amountToBuy = amountToBuy;
     this.asset = asset;

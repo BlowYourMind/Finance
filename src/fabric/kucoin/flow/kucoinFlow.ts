@@ -8,6 +8,7 @@ export class KucoinFlow extends MarketFactory {
     amountToBuy: string,
     asset: string,
     redisBalance: string,
+    redisFuturesBalance: string,
     aproxStableValue: string,
     service: KucoinService,
   ): Market {
@@ -15,6 +16,7 @@ export class KucoinFlow extends MarketFactory {
       amountToBuy,
       asset,
       redisBalance,
+      redisFuturesBalance,
       aproxStableValue,
       service,
     );

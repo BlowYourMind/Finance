@@ -59,19 +59,6 @@ export class KucoinService implements IAdapter {
       throw new Error(error);
     }
   }
-  futureBuy(
-    amount: string,
-    asset: string,
-    approxStableValue: string,
-  ): Promise<void | any> {
-    throw new Error('Method not implemented.');
-  }
-  futureSell(amount: string, asset: string): Promise<void | any> {
-    throw new Error('Method not implemented.');
-  }
-  delay(ms: number): Promise<any> {
-    throw new Error('Method not implemented.');
-  }
   async buy(
     amount: string,
     asset: string,
@@ -113,6 +100,40 @@ export class KucoinService implements IAdapter {
     } catch (error) {
       throw new Error(error);
     }
+  }
+  async futureBuy(
+    amount: string,
+    asset: string,
+    approxStableValue: string,
+  ): Promise<void | any> {
+    try {
+      const amountNum = parseFloat(amount);
+      const contractSize = 0.1;
+      const contracts = Math.ceil(amountNum / contractSize);
+      if (contracts < 1) {
+        throw new Error('Amount too small. Minimum is 1 contract (0.1 ETH)');
+      }
+      const response = await this.futuresExchange.createOrder(
+        asset + 'USDTM',
+        'market',
+        'buy',
+        contracts,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const fullOrder = await this.futuresExchange.fetchOrder(
+        response.id,
+        asset + 'USDTM',
+      );
+      return fullOrder;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+  futureSell(amount: string, asset: string): Promise<void | any> {
+    throw new Error('Method not implemented.');
+  }
+  delay(ms: number): Promise<any> {
+    throw new Error('Method not implemented.');
   }
   transfer(asset: string, amount: string, address: string): Promise<any> {
     throw new Error('Method not implemented.');

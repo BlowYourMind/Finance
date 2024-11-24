@@ -8,18 +8,21 @@ export class Binance implements Market {
   private asset: string;
   private aproxStableValue: string;
   private redisBalance: string;
+  private redisFuturesBalance: string;
 
   constructor(
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
     redisBalance: string,
+    redisFuturesBalance: string,
     private readonly service: BinanceService,
   ) {
     this.aproxStableValue = aproxStableValue;
     this.amountToBuy = amountToBuy;
     this.asset = asset;
     this.redisBalance = redisBalance;
+    this.redisFuturesBalance = redisFuturesBalance;
   }
 
   async buy(): Promise<void> {

@@ -8,6 +8,7 @@ export class KrakenFlow extends MarketFactory {
     amountToBuy: string,
     asset: string,
     redisBalance: string,
+    redisFuturesBalance: string,
     aproxStableValue: string,
     service: KrakenService,
   ): Market {
@@ -15,6 +16,7 @@ export class KrakenFlow extends MarketFactory {
       amountToBuy,
       asset,
       redisBalance,
+      redisFuturesBalance,
       aproxStableValue,
       service,
     );

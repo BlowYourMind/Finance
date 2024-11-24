@@ -67,7 +67,7 @@ export class AppService {
     asset,
     aproxStableValue,
   }: ActionInfo) {
-    const redisBalance: string = await redisInstance.get(
+    const redisSpotBalance: string = await redisInstance.get(
       redisInstance.generateRedisKey({
         key: 'balance',
         marketName: marketLow,
@@ -75,16 +75,26 @@ export class AppService {
         asset: 'usdt',
       }),
     );
+    const redisFuturesBalance: string = await redisInstance.get(
+      redisInstance.generateRedisKey({
+        key: 'balance',
+        marketName: marketHigh,
+        balanceType: 'futures',
+        asset: 'usdt',
+      }),
+    );
+    console.log(redisFuturesBalance)
     const low: Market = new this.markets[marketLow].factory().getMarket(
       amountToBuy,
       asset,
       aproxStableValue,
-      redisBalance,
+      redisSpotBalance,
+      redisFuturesBalance,
       this.markets[marketLow].service,
     );
-    if (Number(redisBalance)) {
-      low.sell();
-    }
+    // if (Number(redisBalance)) {
+    low.futureBuy();
+    // }
     return;
     try {
       const redisBalance: string = await redisInstance.get(

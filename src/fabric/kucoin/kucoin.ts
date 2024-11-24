@@ -9,18 +9,21 @@ export class Kucoin implements Market {
   private asset: string;
   private aproxStableValue: string;
   private redisBalance: string;
+  private redisFuturesBalance: string;
 
   constructor(
     amountToBuy: string,
     asset: string,
     aproxStableValue: string,
     redisBalance: string,
+    redisFuturesBalance: string,
     private readonly service: KucoinService,
   ) {
     this.aproxStableValue = aproxStableValue;
     this.amountToBuy = amountToBuy;
     this.asset = asset;
     this.redisBalance = redisBalance;
+    this.redisFuturesBalance = redisFuturesBalance;
   }
 
   async buy(): Promise<void> {
@@ -42,7 +45,7 @@ export class Kucoin implements Market {
         Number(this.redisBalance) -
         (Number(result?.cost) + Number(result?.fee.cost)),
     });
-    console.log(result);
+    console.log('spot buy result----', result);
   }
   async sell(): Promise<void> {
     const result = await this.service.sell(this.asset);
@@ -60,7 +63,26 @@ export class Kucoin implements Market {
         Number(result.cost) -
         Number(result.fee.cost),
     });
-    console.log(result);
+    console.log('Spot sell result----', result);
+  }
+  async futureBuy(): Promise<void> {
+    const result = await this.service.futureBuy(
+      this.amountToBuy,
+      this.asset,
+      this.aproxStableValue,
+    );
+    await redisInstance.setTransactionRedis({
+      externalTransactionId: result?.id,
+      market: 'kucoin',
+      amountToBuy: Number(result?.amount) / 100,
+      price: result?.price,
+      asset: 'usdt',
+      status: result?.status,
+      type: ActionType.FUTURE_BUY,
+      balanceType: 'futures',
+      value: Number(this.redisFuturesBalance) - Number(result?.cost),
+    });
+    console.log('Future Buy Response----', result);
   }
   async transfer(krakenService: KrakenService): Promise<void> {}
 }

@@ -83,7 +83,6 @@ export class AppService {
         asset: 'usdt',
       }),
     );
-    console.log(redisFuturesBalance);
     const low: Market = new this.markets[marketLow].factory().getMarket(
       amountToBuy,
       asset,
@@ -99,7 +98,8 @@ export class AppService {
       redisSpotBalance,
       redisFuturesBalance,
       this.markets[marketLow].service,
-    ); // if (Number(redisBalance)) {
+    ); 
+    // if (Number(redisBalance)) {
     // low.buy();
     low.transfer(high);
     // }
@@ -169,7 +169,6 @@ export class AppService {
     key: string,
     value: string,
   ): Promise<void> {
-    console.log(key, marketName, balanceType, asset, value);
     await redisInstance.set(
       { key, marketName, balanceType, asset, value },
       300,

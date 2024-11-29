@@ -11,6 +11,7 @@ import { SignatureService } from './signature/signature.service';
 import { OkexService } from './okex/okex.service';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { KucoinService } from './kucoin/kucoin.service';
 
 const rawBodyParsingRoutes: Array<RouteInfo> = [
   {
@@ -25,6 +26,7 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
   providers: [
     AppService,
     CryptoService,
+    KucoinService,
     BinanceService,
     KrakenService,
     SignatureService,

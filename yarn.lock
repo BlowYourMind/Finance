@@ -640,6 +640,11 @@
     "@jridgewell/resolve-uri" "^3.0.3"
     "@jridgewell/sourcemap-codec" "^1.4.10"
 
+"@lukeed/csprng@^1.0.0":
+  version "1.1.0"
+  resolved "https://registry.npmjs.org/@lukeed/csprng/-/csprng-1.1.0.tgz"
+  integrity sha512-Z7C/xXCiGWsg0KuKsHTKJxbWhpI3Vs5GwLfOean7MGyVFGqdRgBbAjOCh6u4bbjPc/8MJ2pZmK/0DLdCbivLDA==
+
 "@nestjs/axios@^0.1.0":
   version "0.1.0"
   resolved "https://registry.npmjs.org/@nestjs/axios/-/axios-0.1.0.tgz"
@@ -675,14 +680,14 @@
     webpack "5.73.0"
     webpack-node-externals "3.0.0"
 
-"@nestjs/common@^7.0.0 || ^8.0.0 || ^9.0.0", "@nestjs/common@^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/common@^9.0.0":
-  version "9.0.8"
-  resolved "https://registry.npmjs.org/@nestjs/common/-/common-9.0.8.tgz"
-  integrity sha512-x6+qGRnTEZmg0jzqPUW8uPCK6qPjc7JGmeHszZOso1YCCKNiqaCM4NY6ndbl2Of3kWSpq3qE4thCmuZ/4DwBQA==
+"@nestjs/common@^7.0.0 || ^8.0.0 || ^9.0.0", "@nestjs/common@^8.0.0 || ^9.0.0 || ^10.0.0", "@nestjs/common@^9.0.0", "@nestjs/common@^9.4.3":
+  version "9.4.3"
+  resolved "https://registry.npmjs.org/@nestjs/common/-/common-9.4.3.tgz"
+  integrity sha512-Gd6D4IaYj01o14Bwv81ukidn4w3bPHCblMUq+SmUmWLyosK+XQmInCS09SbDDZyL8jy86PngtBLTdhJ2bXSUig==
   dependencies:
     iterare "1.2.1"
-    tslib "2.4.0"
-    uuid "8.3.2"
+    tslib "2.5.3"
+    uid "2.0.2"
 
 "@nestjs/config@^2.3.1":
   version "2.3.1"
@@ -1608,6 +1613,13 @@ caniuse-lite@^1.0.30001370:
   version "1.0.30001375"
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001375.tgz"
   integrity sha512-kWIMkNzLYxSvnjy0hL8w1NOaWNr2rn39RTAVyIwcw8juu60bZDWiF1/loOYANzjtJmy6qPgNmn38ro5Pygagdw==
+
+ccxt@^4.4.26:
+  version "4.4.26"
+  resolved "https://registry.npmjs.org/ccxt/-/ccxt-4.4.26.tgz"
+  integrity sha512-uJYzbIJ6AcNvSIZunE6Gz90uM/DLpYM/qub5wMRgkjqMTPJITXstJPxkiuwgo59EuM1seT4+pN38sKmYfUNvAQ==
+  dependencies:
+    ws "^8.8.1"
 
 chalk@^2.0.0:
   version "2.4.2"
@@ -4601,6 +4613,11 @@ tslib@^2.1.0, tslib@2.4.0:
   resolved "https://registry.npmjs.org/tslib/-/tslib-2.4.0.tgz"
   integrity sha512-d6xOpEDfsi2CZVlPQzGeux8XMwLT9hssAsaPYExaQMuYskwb+x1x7J371tWlbBdWHroy99KnVB6qIkUbs5X3UQ==
 
+tslib@2.5.3:
+  version "2.5.3"
+  resolved "https://registry.npmjs.org/tslib/-/tslib-2.5.3.tgz"
+  integrity sha512-mSxlJJwl3BMEQCUNnxXBU9jP4JBktcEGhURcPR6VQVlnP0FdDEsIaz0C35dXNGLyRfrATNofF0F5p2KPxQgB+w==
+
 tsutils@^3.21.0:
   version "3.21.0"
   resolved "https://registry.npmjs.org/tsutils/-/tsutils-3.21.0.tgz"
@@ -4647,6 +4664,13 @@ typescript@*, typescript@^4.3.5, typescript@>=2.7, "typescript@>=2.8.0 || >= 3.2
   version "4.7.4"
   resolved "https://registry.npmjs.org/typescript/-/typescript-4.7.4.tgz"
   integrity sha512-C0WQT0gezHuw6AdY1M2jxUO83Rjf0HP7Sk1DtXj6j1EwkQNZrHAg2XPWlq62oqEhYvONq5pkC2Y9oPljWToLmQ==
+
+uid@2.0.2:
+  version "2.0.2"
+  resolved "https://registry.npmjs.org/uid/-/uid-2.0.2.tgz"
+  integrity sha512-u3xV3X7uzvi5b1MncmZo3i2Aw222Zk1keqLA1YkHldREkAhAqi65wuPfe7lHx8H/Wzy+8CE7S7uS3jekIM5s8g==
+  dependencies:
+    "@lukeed/csprng" "^1.0.0"
 
 universalify@^2.0.0:
   version "2.0.0"
@@ -4842,6 +4866,11 @@ write-file-atomic@^4.0.1:
   dependencies:
     imurmurhash "^0.1.4"
     signal-exit "^3.0.7"
+
+ws@^8.8.1:
+  version "8.18.0"
+  resolved "https://registry.npmjs.org/ws/-/ws-8.18.0.tgz"
+  integrity sha512-8VbfWfHLbbwu3+N6OKsOMpBdT4kXPDDB9cJk2bJ6mh9ucxdlnNvH1e+roYkKmN9Nxw2yjz7VzeO9oOz2zJ04Pw==
 
 xtend@^4.0.0:
   version "4.0.2"

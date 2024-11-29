@@ -8,6 +8,7 @@ export class BinanceFlow extends MarketFactory {
     amountToBuy: string,
     asset: string,
     redisBalance: string,
+    redisFuturesBalance: string,
     aproxStableValue: string,
     service: BinanceService,
   ): Market {
@@ -15,6 +16,7 @@ export class BinanceFlow extends MarketFactory {
       amountToBuy,
       asset,
       redisBalance,
+      redisFuturesBalance,
       aproxStableValue,
       service,
     );

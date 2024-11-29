@@ -1,18 +1,18 @@
-import { MarketFactory } from 'src/fabric/market.factory';
-import { Kraken } from '../kraken';
-import { KrakenService } from 'src/kraken/kraken.service';
+import { KucoinService } from 'src/kucoin/kucoin.service';
+import { Kucoin } from '../kucoin';
 import { Market } from 'src/interfaces/market.interface';
+import { MarketFactory } from 'src/fabric/market.factory';
 
-export class KrakenFlow extends MarketFactory {
+export class KucoinFlow extends MarketFactory {
   factoryMethod(
     amountToBuy: string,
     asset: string,
     redisBalance: string,
     redisFuturesBalance: string,
     aproxStableValue: string,
-    service: KrakenService,
+    service: KucoinService,
   ): Market {
-    return new Kraken(
+    return new Kucoin(
       amountToBuy,
       asset,
       redisBalance,

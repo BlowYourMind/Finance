@@ -97,7 +97,6 @@ export class BinanceService implements IAdapter {
     try {
       const response = await this.exchange.fetchCurrencies();
       const networks = response[asset]?.networks || {};
-      console.log(networks);
       const sortedNetworks = Object.entries(networks)
         .map(([networkKey, networkInfo]: [string, any]) => ({
           network: networkInfo.network,

@@ -37,11 +37,10 @@ export class Binance implements Market {
       balanceType: 'spot',
       value: Number(this.redisBalance) - Number(result?.cost),
     });
-    console.log('Binance Spot Buy', result);
   }
   async transfer(highMarket: any): Promise<void> {
     const highMarketNetworks = await highMarket.service.getNetworks(this.asset);
-    const lowMarketNetworks = await this.service.getNetworks(this.asset,true);
+    const lowMarketNetworks = await this.service.getNetworks(this.asset, true);
     const bestNetwork = await this.compareNetworks(
       lowMarketNetworks,
       highMarketNetworks,

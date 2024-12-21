@@ -108,7 +108,6 @@ export class AppService {
   ) {
     await this.markets[market].service[method](asset).then((response: any) => {
       if (response) {
-        console.log(response);
         const asset = Object.keys(response)[0].toLowerCase();
         this.initialiseRedisBalance(
           asset,

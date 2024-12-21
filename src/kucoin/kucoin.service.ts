@@ -82,7 +82,6 @@ export class KucoinService implements IAdapter {
     }
   }
   async sell(asset: string): Promise<void | any> {
-    console.log('Selling', asset);
     const amountToSell = Object.values(await this.check(asset))[0];
     try {
       const response = await this.exchange.createOrder(
@@ -249,8 +248,6 @@ export class KucoinService implements IAdapter {
     const interval = setInterval(async () => {
       try {
         const currentBalance = await this.getInitialBalance(asset);
-        console.log('Current balance:', currentBalance);
-
         if (currentBalance > startBalance) {
           clearInterval(interval);
         }

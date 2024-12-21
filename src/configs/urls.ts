@@ -1,18 +1,3 @@
-export enum KrakenUrls {
-  WITHDRAW_INFO = '/0/private/WithdrawInfo',
-  WITHDRAW = '/0/private/Withdraw',
-  GET_LEDGERS = '/0/private/Ledgers',
-  FUTURE_BALANCE = '/derivatives/api/v3/accounts',
-  FUTURE_WALLET_TRANSFER = '/derivatives/api/v3/withdrawal',
-  WALLET_TRANSFER = '/0/private/WalletTransfer',
-  BALANCE = '/0/private/Balance',
-  DEPOSIT_ADDRESS = '/0/private/DepositAddresses',
-  DEPOSIT_METHODS = '/0/private/DepositMethods',
-  ADD_ORDER = '/0/private/AddOrder',
-  QUERY_ORDERS = '/0/private/QueryOrders',
-  FUTURE_SEND_ORDER = '/derivatives/api/v3/sendorder',
-}
-
 export enum OkexUrls {
   CURRENCIES = '/api/v5/asset/currencies',
   TRANSFER = '/api/v5/asset/transfer',

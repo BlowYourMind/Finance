@@ -14,6 +14,7 @@ export interface IAdapter {
   check(asset: string): Promise<BalanceInfo>;
   getDepositAddress(
     asset: string,
+    network?:string,
     isNew?: boolean,
   ): Promise<any>;
   checkFuture(asset?: string): Promise<BalanceInfo> | never;

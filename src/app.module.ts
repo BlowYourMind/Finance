@@ -3,7 +3,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CryptoService } from './crypto/crypto.service';
 import { BinanceService } from './binance/binance.service';
-import { KrakenService } from './kraken/kraken.service';
 import { HttpModule } from '@nestjs/axios';
 import { RawBodyMiddlewareMiddleware } from './middleware/raw-body.middleware';
 import { RouteInfo } from '@nestjs/common/interfaces';
@@ -28,7 +27,6 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
     CryptoService,
     KucoinService,
     BinanceService,
-    KrakenService,
     SignatureService,
     OkexService,
   ],

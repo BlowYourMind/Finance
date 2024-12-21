@@ -146,27 +146,34 @@ export class KucoinService implements IAdapter {
   }
 
   async futureSell(asset: string): Promise<void | any> {
-    const amountToSell = await this.futuresExchange.fetchPosition(
-      asset + 'USDTM',
-    );
-    const response = await this.futuresExchange.createOrder(
-      asset + 'USDTM',
-      'market',
-      'sell',
-      amountToSell.contracts,
-    );
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    const fullOrder = await this.futuresExchange.fetchOrder(
-      response.id,
-      asset + 'USDTM',
-    );
-    return fullOrder;
-  }
-  async transfer(asset: string, address: string): Promise<any> {
     try {
-      const bestNetwork = await this.getBestNetwork(asset);
+      const amountToSell = await this.futuresExchange.fetchPosition(
+        asset + 'USDTM',
+      );
+      const response = await this.futuresExchange.createOrder(
+        asset + 'USDTM',
+        'market',
+        'sell',
+        amountToSell.contracts,
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const fullOrder = await this.futuresExchange.fetchOrder(
+        response.id,
+        asset + 'USDTM',
+      );
+      return fullOrder;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+  async transfer(
+    asset: string,
+    address: string,
+    network: string,
+  ): Promise<any> {
+    try {
       const params: any = {
-        network: bestNetwork.networkInfo.id,
+        network: network,
       };
       const balances = await this.exchange.fetchBalance();
       const availableAmount = balances.free[asset.toUpperCase()];
@@ -181,40 +188,41 @@ export class KucoinService implements IAdapter {
       return await this.exchange.withdraw(
         asset.toUpperCase(),
         availableAmount,
-        '0x9d58abddb0b70bfca5a1cd69cffa04fb9e0d4475',
+        address,
         params,
       );
     } catch (error) {
       throw new Error(error);
     }
   }
-
-  async getBestNetwork(asset: string): Promise<any> {
-    const currencies = await this.exchange.fetchCurrencies();
-    const currencyInfo = currencies[asset.toUpperCase()];
-    const networks = currencyInfo.networks;
-    const availableNetworks = Object.entries(networks)
-      .filter(([_, info]) => {
-        return (
-          info.limits &&
-          info.limits.deposit &&
-          info.limits.deposit.min !== undefined
-        );
-      })
-      .map(([network, info]) => ({
-        network,
-        fee: info.fee,
-        networkInfo: info,
-        depositMinSize: info.limits.deposit.min,
-      }));
-    return availableNetworks.sort((a, b) => a.fee - b.fee)[1] || 'ETH';
+  async getNetworks(asset: string, isWithdraw: boolean) {
+    try {
+      const response = await this.exchange.fetchCurrencies();
+      const networks = response[asset]?.networks || {};
+      const sortedNetworks = Object.entries(networks)
+        .map(([networkKey, networkInfo]: [string, any]) => ({
+          network: networkInfo.info.chainName,
+          enabled: isWithdraw
+            ? networkInfo.info.isWithdrawEnabled
+            : networkInfo.info.isDepositEnabled,
+          withdrawalMinFee:
+            networkInfo.info.withdrawalMinFee?.toString() || '0',
+        }))
+        .sort((a, b) => {
+          return (
+            parseFloat(a.withdrawalMinFee) - parseFloat(b.withdrawalMinFee)
+          );
+        });
+      return sortedNetworks;
+    } catch (error) {
+      throw error;
+    }
   }
 
-  async getDepositAddress(asset: string): Promise<any> {
+  async getDepositAddress(asset: string, network: string): Promise<any> {
     try {
-      const bestNetwork = await this.getBestNetwork(asset);
       const params: any = {
-        network: bestNetwork.networkInfo.id,
+        network: network,
       };
       try {
         const existingAddress = await this.exchange.fetchDepositAddress(

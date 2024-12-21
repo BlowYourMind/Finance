@@ -1,6 +1,5 @@
 import { BinanceService } from 'src/binance/binance.service';
 import { Market } from 'src/interfaces/market.interface';
-import { KrakenService } from 'src/kraken/kraken.service';
 import { KucoinService } from 'src/kucoin/kucoin.service';
 import { ActionType, redisInstance } from 'src/redis/redis.service';
 
@@ -96,9 +95,23 @@ export class Kucoin implements Market {
     console.log('Future Sell Response----', result);
   }
   async transfer(highMarket: any): Promise<void> {
+    const highMarketNetworks = await highMarket.service.getNetworks(this.asset);
+    console.log(highMarketNetworks)
+    const lowMarketNetworks = await this.service.getNetworks(this.asset,true);
+    console.log(lowMarketNetworks)
+    const bestNetwork = await this.compareNetworks(
+      lowMarketNetworks,
+      highMarketNetworks,
+    );
+    console.log(bestNetwork)
+    const address = await highMarket.service.getDepositAddress(
+      this.asset,
+      bestNetwork,
+    );
     const result = await this.service.transfer(
       this.asset,
-      await highMarket.service.getDepositAddress(this.asset),
+      address,
+      bestNetwork.toLowerCase(),
     );
     redisInstance.set(
       {
@@ -114,5 +127,24 @@ export class Kucoin implements Market {
       this.sell();
       this.futureSell();
     }
+  }
+  async compareNetworks(
+    lowMarketNetworks: any[],
+    highMarketNetworks: any[],
+  ): Promise<string | null> {
+    const lowMarketMap = new Map(
+      lowMarketNetworks.map((network) => [
+        network.network.toLowerCase(),
+        network,
+      ]),
+    );
+    for (const highNetwork of highMarketNetworks) {
+      const lowNetwork = lowMarketMap.get(highNetwork.network.toLowerCase());
+      console.log(lowNetwork)
+      if (lowNetwork && lowNetwork.enabled) {
+        return highNetwork.network;
+      }
+    }
+    return null;
   }
 }

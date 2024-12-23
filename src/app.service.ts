@@ -11,34 +11,41 @@ import { BinanceFlow } from './fabric/binance/flow/binanceFlow';
 import { Market } from './interfaces/market.interface';
 import { KucoinService } from './kucoin/kucoin.service';
 import { KucoinFlow } from './fabric/kucoin/flow/kucoinFlow';
+import { PoloniexFlow } from './fabric/poloniex/flow/poloniexFlow';
+import { PoloniexService } from './poloniex/poloniex.service';
+import { GateFlow } from './fabric/gate/flow/gateFlow';
+import { GateService } from './gate/gate.service';
 
 colors.enable();
 
 @Injectable()
 export class AppService {
   markets = {
-    binance: {
-      service: this.binanceService,
-      factory: BinanceFlow,
-    },
-    // crypto: {
-    //   service: this.cryptoService,
-    //   factory: '',
+    // binance: {
+    //   service: this.binanceService,
+    //   factory: BinanceFlow,
     // },
-    kucoin: {
-      service: this.kuCoinService,
-      factory: KucoinFlow,
+    // poloniex: {
+    //   service: this.poloniexService,
+    //   factory: PoloniexFlow,
+    // },
+    gate: {
+      service: this.gateService,
+      factory: GateFlow,
     },
+    // kucoin: {
+    //   service: this.kuCoinService,
+    //   factory: KucoinFlow,
+    // },
   };
   constructor(
     private readonly binanceService: BinanceService,
-    private readonly cryptoService: CryptoService,
     private readonly kuCoinService: KucoinService,
-    private readonly okexService: OkexService,
+    private readonly poloniexService: PoloniexService,
+    private readonly gateService: GateService,
   ) {
     for (let market in this.markets) {
       this.getMarketsBalance(market, 'check', 'spot');
-
       if (market === 'binance') continue;
       this.getMarketsBalance(market, 'checkFuture', 'futures');
     }
@@ -47,8 +54,8 @@ export class AppService {
         amountToBuy: '0.005',
         asset: 'ETH',
         aproxStableValue: '16',
-        marketHigh: MarketType.KUCOIN,
-        marketLow: MarketType.BINANCE,
+        marketHigh: MarketType.GATE,
+        marketLow: MarketType.GATE,
       });
     }, 500);
   }
@@ -92,9 +99,8 @@ export class AppService {
       this.markets[marketHigh].service,
     );
     // low.transfer(high);
-    // low.buy()
-    // high.buy();
-    // low.buy();
+    // high.futureBuy();
+    low.futureSell();
     // if (Number(redisBalance)) {
     // low.buy();
     // low.transfer(high);
@@ -108,6 +114,7 @@ export class AppService {
   ) {
     await this.markets[market].service[method](asset).then((response: any) => {
       if (response) {
+        console.log(response);
         const asset = Object.keys(response)[0].toLowerCase();
         this.initialiseRedisBalance(
           asset,

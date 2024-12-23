@@ -11,6 +11,8 @@ import { OkexService } from './okex/okex.service';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { KucoinService } from './kucoin/kucoin.service';
+import { PoloniexService } from './poloniex/poloniex.service';
+import { GateService } from './gate/gate.service';
 
 const rawBodyParsingRoutes: Array<RouteInfo> = [
   {
@@ -26,6 +28,8 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
     AppService,
     CryptoService,
     KucoinService,
+    PoloniexService,
+    GateService,
     BinanceService,
     SignatureService,
     OkexService,

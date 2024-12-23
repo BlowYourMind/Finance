@@ -1,5 +1,3 @@
-import { KrakenService } from 'src/kraken/kraken.service';
-
 export interface Market {
   buy?(): Promise<void>;
   sell?(): Promise<void>;

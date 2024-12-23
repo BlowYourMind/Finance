@@ -3,13 +3,13 @@ import { Market } from 'src/interfaces/market.interface';
 import { KucoinService } from 'src/kucoin/kucoin.service';
 import { ActionType, redisInstance } from 'src/redis/redis.service';
 
-export class Kucoin implements Market {
+export class Gate implements Market {
   private amountToBuy: string;
   private asset: string;
   private aproxStableValue: string;
   private redisBalance: string;
   private redisFuturesBalance: string;
-  //transfer , check reveived balance
+
   constructor(
     amountToBuy: string,
     asset: string,
@@ -33,16 +33,14 @@ export class Kucoin implements Market {
     );
     await redisInstance.setTransactionRedis({
       externalTransactionId: result?.id,
-      market: 'kucoin',
-      amountToBuy: this.amountToBuy,
+      market: 'gate',
+      amountToBuy: result.info.filled_amount,
       price: result?.price,
       asset: 'usdt',
       status: result?.status,
       type: ActionType.SPOT_BUY,
       balanceType: 'spot',
-      value:
-        Number(this.redisBalance) -
-        (Number(result?.cost) + Number(result?.fee.cost)),
+      value: Number(this.redisBalance) - Number(result?.cost),
     });
     console.log('spot buy result----', result);
   }
@@ -50,17 +48,14 @@ export class Kucoin implements Market {
     const result = await this.service.sell(this.asset);
     await redisInstance.setTransactionRedis({
       externalTransactionId: result?.id,
-      market: 'kucoin',
+      market: 'gate',
       amountToBuy: result?.amount,
       price: result?.price,
       asset: 'usdt',
       status: result?.status,
       type: ActionType.SPOT_SELL,
       balanceType: 'spot',
-      value:
-        Number(this.redisBalance) +
-        Number(result.cost) -
-        Number(result.fee.cost),
+      value: Number(this.redisBalance) + Number(result.cost),
     });
     console.log('Spot sell result----', result);
   }
@@ -68,14 +63,14 @@ export class Kucoin implements Market {
     const result = await this.service.futureBuy(this.amountToBuy, this.asset);
     await redisInstance.setTransactionRedis({
       externalTransactionId: result?.id,
-      market: 'kucoin',
+      market: 'gate',
       amountToBuy: Number(result?.amount),
       price: result?.price,
       asset: 'usdt',
       status: result?.status,
       type: ActionType.FUTURE_BUY,
       balanceType: 'futures',
-      value: Number(this.redisFuturesBalance) - Number(result?.cost),
+      value: Number(this.redisFuturesBalance) - Number(result?.cost) / 5,
     });
     console.log('Future Buy Response----', result);
   }
@@ -83,14 +78,14 @@ export class Kucoin implements Market {
     const result = await this.service.futureSell(this.asset);
     await redisInstance.setTransactionRedis({
       externalTransactionId: result?.id,
-      market: 'kucoin',
+      market: 'gate',
       amountToBuy: Number(result?.amount),
       price: result?.price,
       asset: 'usdt',
       status: result?.status,
       type: ActionType.FUTURE_SELL,
       balanceType: 'futures',
-      value: Number(this.redisFuturesBalance) + Number(result?.cost),
+      value: Number(this.redisFuturesBalance) + Number(result?.cost) / 5,
     });
     console.log('Future Sell Response----', result);
   }
@@ -103,10 +98,12 @@ export class Kucoin implements Market {
       lowMarketNetworks,
       highMarketNetworks,
     );
+    console.log(bestNetwork);
     const address = await highMarket.service.getDepositAddress(
       this.asset,
       bestNetwork,
     );
+    console.log(address);
     const result = await this.service.transfer(
       this.asset,
       address,

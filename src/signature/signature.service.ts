@@ -29,38 +29,6 @@ export class SignatureService {
 
     return hash;
   }
-  public static encryptFutureKrakenData(
-    path: string,
-    request: any,
-    secret: string,
-    nonce: number,
-  ) {
-    if (path.startsWith('/derivatives')) {
-      path = path.slice('/derivatives'.length);
-    }
-    const message = new URLSearchParams(request).toString() + nonce + path;
-    const hash1 = createHash('sha256').update(message).digest();
-    const decode = Buffer.from(secret, 'base64');
-    const hash2 = createHmac('sha512', decode).update(hash1).digest();
-
-    return Buffer.from(hash2).toString('base64');
-  }
-  public static encryptKrakenData(
-    path: string,
-    request: any,
-    secret: string,
-    nonce: number,
-  ) {
-    return createHmac('sha512', Buffer.from(secret, 'base64'))
-      .update(path)
-      .update(
-        createHash('sha256')
-          .update(nonce + request)
-          .digest(),
-      )
-      .digest('base64');
-  }
-
   public encryptBinanceWSData(data: string, key: string) {}
 
   public static encryptBinanceData(data: string, key: string) {
@@ -79,27 +47,6 @@ export class SignatureService {
   public static createBinanceHeader() {
     return {
       'X-MBX-APIKEY': process.env.BINANCE_PUBLIC_KEY,
-    };
-  }
-  public static createKrakenHeader(
-    signature: string,
-    nonce: number,
-    isFuture: boolean = false,
-  ) {
-    if (isFuture) {
-      return {
-        Accept: 'application/json',
-        APIKey: process.env.KRAKEN_FUTURE_PUBLIC_KEY,
-        Nonce: nonce.toString(),
-        Authent: signature,
-      };
-    }
-    return {
-      Accept: 'application/json',
-      'API-Key': process.env.KRAKEN_PUBLIC_KEY,
-      Nonce: nonce.toString(),
-      'API-Sign': signature,
-      'Content-Type': 'application/x-www-form-urlencoded',
     };
   }
 }

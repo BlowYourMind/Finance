@@ -10,14 +10,109 @@ import { BinanceFutureActionParams } from 'src/dto/binance.dto';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { IAdapter } from 'src/interfaces/adapter.interface';
 import { ActionType } from 'src/redis/redis.service';
+import * as ccxt from 'ccxt';
 
 colors.enable();
 @Injectable()
 export class BinanceService implements IAdapter {
-  constructor(private readonly httpService: HttpService) {}
+  private exchange: ccxt.binance;
 
-  @Cron(CronExpression.EVERY_SECOND)
-  async test() {}
+  constructor(private readonly httpService: HttpService) {
+    const apiKey = process.env.BINANCE_PUBLIC_KEY;
+    const secretKey = process.env.BINANCE_SECRET_KEY;
+    this.exchange = new ccxt.binance({
+      apiKey: apiKey,
+      secret: secretKey,
+    });
+  }
+
+  async check(asset: string = 'USDT'): Promise<BalanceInfo> {
+    try {
+      const formattedAsset = asset.toUpperCase();
+      const response = await this.exchange.fetchBalance();
+      return { [formattedAsset.toLowerCase()]: response.free[formattedAsset] };
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async checkFuture(asset: string = 'BNFCR'): Promise<BalanceInfo> {
+    const res = (
+      await this.makeRequest(
+        BinanceUrls.FUTURE_BALANCE,
+        await this.makeQuery({}),
+        'GET',
+        true,
+      )
+    )?.data.filter((item: any) => item.asset === 'BNFCR'); // asset changed to BNFCR
+    return { ['bnfcr']: res[0] ? res[0].availableBalance : 0 }; // asset.toLowerCase() changed to 'bnfcr'
+  }
+
+  async buy(amount: string, asset: string): Promise<any> {
+    try {
+      const response = await this.exchange.createOrder(
+        asset + '/USDT',
+        'market',
+        'buy',
+        Number(amount),
+      );
+      return response;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async sell(amount: string, asset: string): Promise<any> {
+    try {
+      const response = await this.exchange.createOrder(
+        asset + '/USDT',
+        'market',
+        'sell',
+        Number(amount),
+      );
+      return response;
+    } catch (error) {
+      throw new Error(error);
+    }
+  }
+
+  async transfer(asset: string, address: string, network: string) {
+    try {
+      const amountToTransfer = Object.values(await this.check(asset))[0];
+      const response = await this.exchange.withdraw(
+        asset,
+        Number(amountToTransfer),
+        address,
+        {
+          network: network,
+        },
+      );
+      return response;
+    } catch (e) {
+      throw e;
+    }
+  }
+
+  async getNetworks(asset: string, isWithdraw: boolean) {
+    try {
+      const response = await this.exchange.fetchCurrencies();
+      const networks = response[asset]?.networks || {};
+      const sortedNetworks = Object.entries(networks)
+        .map(([networkKey, networkInfo]: [string, any]) => ({
+          network: networkInfo.network,
+          enabled: isWithdraw
+            ? networkInfo.info.withdrawEnable
+            : networkInfo.info.depositEnable,
+          withdrawFee: networkInfo.info.withdrawFee?.toString() || '0',
+        }))
+        .sort((a, b) => {
+          return parseFloat(a.withdrawFee) - parseFloat(b.withdrawFee);
+        });
+      return sortedNetworks;
+    } catch (error) {
+      throw error;
+    }
+  }
 
   async futureBuy(amount: string, asset: string, redisFutureBalance: string) {
     const res = (
@@ -41,17 +136,6 @@ export class BinanceService implements IAdapter {
       balanceType: 'futures',
       value: redisFutureBalance,
     };
-  }
-
-  async buy(amount: string, asset: string) {
-    const query = await this.makeQuery({
-      symbol: asset + 'USDT',
-      side: 'BUY',
-      type: 'MARKET',
-      // quantity: amount,
-      quoteOrderQty:amount, // ||  if we plan to buy for all available balance
-    });
-    return (await this.makeRequest(BinanceUrls.ORDER, query))?.data;
   }
 
   async delay(ms: number) {
@@ -91,56 +175,11 @@ export class BinanceService implements IAdapter {
     };
   }
 
-  async sell(asset: string, redisBalance: string) {
-    const limit = await this.getCapitalConfig(asset);
-    const query = await this.makeQuery({
-      symbol: asset + 'USDT',
-      side: 'SELL',
-      type: 'MARKET',
-      quantity: Number(limit.free).toFixed(3),
-    });
-    const res = (await this.makeRequest(BinanceUrls.ORDER, query)).data;
-    return {
-      externalTransactionId: res.orderId,
-      market: 'binance',
-      amountToBuy: res.origQty,
-      price: res.fills[0].price,
-      asset: res.symbol,
-      status: res.status,
-      type: ActionType.SPOT_SELL,
-      balanceType: 'spot',
-      value: Number(redisBalance) + Number(res?.cummulativeQuoteQty),
-    };
-  }
-
-  // TODO: add market type
-  async transfer(asset: string, address: string, amount?: string) {
-    const limit = await this.getCapitalConfig(asset);
-    const query = await this.makeQuery({
-      coin: asset,
-      amount: limit.free,
-      address,
-    });
-
-    const res = await this.makeRequest(BinanceUrls.WITHDRAW, query);
-    return res.data;
-  }
-
   async getAllConfig() {
     return (
       await this.makeRequest(BinanceUrls.GET_CONFIG, await this.makeQuery())
     ).data;
   }
-
-  async check(asset: string = 'USDT'): Promise<BalanceInfo> {
-    const res = await this.makeRequest(
-      BinanceUrls.GET_ASSET,
-      await this.makeQuery({ asset }),
-      'POST',
-    );
-    return { [asset.toLowerCase()]: res?.data[0] ? res?.data[0]?.free : 0 };
-  }
-
   async checkAll(): Promise<BalanceInfo> {
     const res = await this.makeRequest(
       BinanceUrls.GET_BALANCE,
@@ -150,18 +189,6 @@ export class BinanceService implements IAdapter {
     return res.data.balances
       .map((item: any) => ({ [item.asset.toLowerCase()]: item.free }))
       .reduce((acc, item) => ({ ...acc, ...item }), {});
-  }
-
-  async checkFuture(asset: string = 'BNFCR'): Promise<BalanceInfo> {
-    const res = (
-      await this.makeRequest(
-        BinanceUrls.FUTURE_BALANCE,
-        await this.makeQuery({}),
-        'GET',
-        true,
-      )
-    )?.data.filter((item: any) => item.asset === 'BNFCR'); // asset changed to BNFCR
-    return { ['bnfcr']: res[0] ? res[0].availableBalance : 0 }; // asset.toLowerCase() changed to 'bnfcr'
   }
 
   async getCapitalConfig(asset: string) {

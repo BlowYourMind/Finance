@@ -3,29 +3,20 @@ import { BalanceInfo } from 'src/dto/balance.dto';
 import { IAdapter } from 'src/interfaces/adapter.interface';
 import * as ccxt from 'ccxt';
 
-export class KucoinService implements IAdapter {
-  private exchange: ccxt.kucoin;
-  private futuresExchange: ccxt.kucoinfutures;
+export class PoloniexService implements IAdapter {
+  private exchange: ccxt.poloniex;
+  private futuresExchange: ccxt.poloniexfutures;
 
   constructor(private readonly httpService: HttpService) {
-    const apiKey = process.env.KUCOIN_API_KEY;
-    const secretKey = process.env.KUCOIN_SECRET;
-    const passphrase = process.env.KUCOIN_PASSPHRASE;
-    this.exchange = new ccxt.kucoin({
+    const apiKey = process.env.POLONIEX_API_KEY;
+    const secretKey = process.env.POLONIEX_SECRET_KEY;
+    this.exchange = new ccxt.poloniex({
       apiKey: apiKey,
       secret: secretKey,
-      password: passphrase,
-      options: {
-        defaultType: 'spot',
-      },
     });
-    this.futuresExchange = new ccxt.kucoinfutures({
+    this.futuresExchange = new ccxt.poloniexfutures({
       apiKey: apiKey,
       secret: secretKey,
-      password: passphrase,
-      options: {
-        defaultType: 'future',
-      },
     });
     this.exchange.options = {
       ...this.exchange.options,
@@ -40,9 +31,7 @@ export class KucoinService implements IAdapter {
   async check(asset: string): Promise<any> {
     try {
       const formattedAsset = asset.toUpperCase();
-      const response = await this.exchange.fetchBalance({
-        type: 'trade',
-      });
+      const response = await this.exchange.fetchBalance();
       return { [formattedAsset.toLowerCase()]: response.free[formattedAsset] };
     } catch (error) {
       throw new Error(error);
@@ -51,11 +40,11 @@ export class KucoinService implements IAdapter {
   async checkFuture(asset?: string): Promise<any> | never {
     try {
       const formattedAsset = asset.toUpperCase();
-      const response = await this.futuresExchange.fetchBalance({
-        type: 'main',
-      });
+      const response = await this.futuresExchange.fetchBalance();
+      console.log(response);
       return { [formattedAsset.toLowerCase()]: response.free[formattedAsset] };
     } catch (error) {
+        console.log(error)
       throw new Error(error);
     }
   }

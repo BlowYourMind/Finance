@@ -1,49 +1,34 @@
-import { HttpService } from '@nestjs/axios';
-import { BalanceInfo } from 'src/dto/balance.dto';
 import { IAdapter } from 'src/interfaces/adapter.interface';
 import * as ccxt from 'ccxt';
 
-export class KucoinService implements IAdapter {
-  private exchange: ccxt.kucoin;
-  private futuresExchange: ccxt.kucoinfutures;
+export class GateService implements IAdapter {
+  private exchange: ccxt.gateio;
+  private futuresExchange: ccxt.gateio;
 
-  constructor(private readonly httpService: HttpService) {
-    const apiKey = process.env.KUCOIN_API_KEY;
-    const secretKey = process.env.KUCOIN_SECRET;
-    const passphrase = process.env.KUCOIN_PASSPHRASE;
-    this.exchange = new ccxt.kucoin({
+  constructor() {
+    const apiKey = process.env.GATE_ACCESS_KEY;
+    const secretKey = process.env.GATE_SECRET_KEY;
+    this.exchange = new ccxt.gateio({
       apiKey: apiKey,
       secret: secretKey,
-      password: passphrase,
-      options: {
-        defaultType: 'spot',
-      },
     });
-    this.futuresExchange = new ccxt.kucoinfutures({
+    this.futuresExchange = new ccxt.gateio({
       apiKey: apiKey,
       secret: secretKey,
-      password: passphrase,
       options: {
-        defaultType: 'future',
+        defaultType: 'swap',
+        defaultContractType: 'usdt-margined',
       },
     });
-    this.exchange.options = {
-      ...this.exchange.options,
-      adjustForTimeDifference: true,
-    };
-    this.futuresExchange.options = {
-      ...this.futuresExchange.options,
-      adjustForTimeDifference: true,
-    };
   }
 
   async check(asset: string): Promise<any> {
     try {
       const formattedAsset = asset.toUpperCase();
-      const response = await this.exchange.fetchBalance({
-        type: 'trade',
-      });
-      return { [formattedAsset.toLowerCase()]: response.free[formattedAsset] };
+      const response = await this.exchange.fetchBalance();
+      return {
+        [formattedAsset.toLowerCase()]: response.free[formattedAsset] || 0,
+      };
     } catch (error) {
       throw new Error(error);
     }
@@ -51,11 +36,12 @@ export class KucoinService implements IAdapter {
   async checkFuture(asset?: string): Promise<any> | never {
     try {
       const formattedAsset = asset.toUpperCase();
-      const response = await this.futuresExchange.fetchBalance({
-        type: 'main',
-      });
-      return { [formattedAsset.toLowerCase()]: response.free[formattedAsset] };
+      const response = await this.futuresExchange.fetchBalance();
+      return {
+        [formattedAsset.toLowerCase()]: response.free[formattedAsset] || 0,
+      };
     } catch (error) {
+      console.log(error);
       throw new Error(error);
     }
   }
@@ -65,22 +51,22 @@ export class KucoinService implements IAdapter {
     approxStableValue: string,
   ): Promise<any> {
     try {
+      const ticker = await this.exchange.fetchTicker(asset + '/USDT');
+      const currentPrice = ticker.last;
+
       const response = await this.exchange.createOrder(
         asset + '/USDT',
         'market',
         'buy',
         Number(amount),
+        currentPrice,
       );
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const fullOrder = await this.exchange.fetchOrder(
-        response.id,
-        asset + '/USDT',
-      );
-      return fullOrder;
+      return response;
     } catch (error) {
       throw new Error(error);
     }
   }
+
   async sell(asset: string): Promise<void | any> {
     const amountToSell = Object.values(await this.check(asset))[0];
     try {
@@ -90,31 +76,24 @@ export class KucoinService implements IAdapter {
         'sell',
         Number(amountToSell),
       );
-      await new Promise((resolve) => setTimeout(resolve, 500));
-      const fullOrder = await this.exchange.fetchOrder(
-        response.id,
-        asset + '/USDT',
-      );
-      return fullOrder;
+      return response;
     } catch (error) {
       throw new Error(error);
     }
   }
   async calculateContractSize(amount: string, asset: string) {
     try {
-      let contractSize = 1;
-
       const marketFetchResponse = await this.futuresExchange.fetchMarkets({
-        symbol: asset + 'USDTM',
+        symbol: asset + '/USDT:USDT',
       });
 
-      marketFetchResponse.forEach((element) => {
-        if (element.info.symbol === asset + 'USDTM') {
-          contractSize = element.contractSize;
-        }
-      });
-      const amountNum = parseFloat(amount);
-      const contracts = Math.ceil(amountNum / contractSize);
+      let market = marketFetchResponse.find(
+        (element) => element.symbol === asset + '/USDT:USDT',
+      );
+
+      const decimal = Number(amount) / market.contractSize;
+      const contracts = Number(decimal.toString().replace('.', '')) - 1;
+
       return contracts;
     } catch (error) {
       throw new Error(error);
@@ -123,44 +102,30 @@ export class KucoinService implements IAdapter {
   async futureBuy(amount: string, asset: string): Promise<void | any> {
     try {
       const contracts = await this.calculateContractSize(amount, asset);
-
-      if (contracts < 1) {
-        throw new Error('Amount too small. Minimum is 1 contract (0.1 ETH)');
-      }
       const response = await this.futuresExchange.createOrder(
-        asset + 'USDTM',
+        asset + '/USDT:USDT',
         'market',
         'buy',
         contracts,
       );
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const fullOrder = await this.futuresExchange.fetchOrder(
-        response.id,
-        asset + 'USDTM',
-      );
-      return fullOrder;
+      return response;
     } catch (error) {
-      throw new Error(error);
+      console.error('Error in futureBuy:', error);
+      throw error;
     }
   }
-
   async futureSell(asset: string): Promise<void | any> {
     try {
       const amountToSell = await this.futuresExchange.fetchPosition(
-        asset + 'USDTM',
+        asset + '/USDT:USDT',
       );
       const response = await this.futuresExchange.createOrder(
-        asset + 'USDTM',
+        asset + '/USDT:USDT',
         'market',
         'sell',
         amountToSell.contracts,
       );
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      const fullOrder = await this.futuresExchange.fetchOrder(
-        response.id,
-        asset + 'USDTM',
-      );
-      return fullOrder;
+      return response;
     } catch (error) {
       throw new Error(error);
     }
@@ -176,14 +141,6 @@ export class KucoinService implements IAdapter {
       };
       const balances = await this.exchange.fetchBalance();
       const availableAmount = balances.free[asset.toUpperCase()];
-      await this.exchange.transfer(
-        asset.toUpperCase(),
-        availableAmount,
-        'trade',
-        'main',
-      );
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       return await this.exchange.withdraw(
         asset.toUpperCase(),
         availableAmount,
@@ -197,21 +154,23 @@ export class KucoinService implements IAdapter {
   async getNetworks(asset: string, isWithdraw: boolean) {
     try {
       const response = await this.exchange.fetchCurrencies();
-      const networks = response[asset]?.networks || {};
+      const networks = response[asset].networks || {};
+      const fees = await this.exchange.fetchDepositWithdrawFees([asset]);
+      const simplifiedFees = await fees[asset].networks;
       const sortedNetworks = Object.entries(networks)
         .map(([networkKey, networkInfo]: [string, any]) => ({
-          network: networkInfo.info.chainName,
+          network: networkKey,
           enabled: isWithdraw
-            ? networkInfo.info.isWithdrawEnabled
-            : networkInfo.info.isDepositEnabled,
-          withdrawalMinFee:
-            networkInfo.info.withdrawalMinFee?.toString() || '0',
+            ? !networkInfo.info?.withdraw_disabled
+            : !networkInfo.info?.deposit_disabled,
+          fee: isWithdraw
+            ? simplifiedFees[networkInfo.info.chain]?.withdraw?.fee || 100
+            : 0,
         }))
         .sort((a, b) => {
-          return (
-            parseFloat(a.withdrawalMinFee) - parseFloat(b.withdrawalMinFee)
-          );
+          return parseFloat(a.fee) - parseFloat(b.fee);
         });
+
       return sortedNetworks;
     } catch (error) {
       throw error;
@@ -261,8 +220,6 @@ export class KucoinService implements IAdapter {
     const balances = await this.exchange.fetchBalance();
     return balances.total[asset.toUpperCase()] || 0;
   }
-  // не очень понятно как сравнивать нетворки которые использует биржа,
-  // например на бинансе для депозита нет trc20 а на kucoin есть и является самым дешевым способом
   delay(ms: number): Promise<any> {
     throw new Error('Method not implemented.');
   }

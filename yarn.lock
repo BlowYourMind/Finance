@@ -1614,10 +1614,10 @@ caniuse-lite@^1.0.30001370:
   resolved "https://registry.npmjs.org/caniuse-lite/-/caniuse-lite-1.0.30001375.tgz"
   integrity sha512-kWIMkNzLYxSvnjy0hL8w1NOaWNr2rn39RTAVyIwcw8juu60bZDWiF1/loOYANzjtJmy6qPgNmn38ro5Pygagdw==
 
-ccxt@^4.4.26:
-  version "4.4.26"
-  resolved "https://registry.npmjs.org/ccxt/-/ccxt-4.4.26.tgz"
-  integrity sha512-uJYzbIJ6AcNvSIZunE6Gz90uM/DLpYM/qub5wMRgkjqMTPJITXstJPxkiuwgo59EuM1seT4+pN38sKmYfUNvAQ==
+ccxt@^4.4.42:
+  version "4.4.42"
+  resolved "https://registry.npmjs.org/ccxt/-/ccxt-4.4.42.tgz"
+  integrity sha512-4mJ8vXDmvJEuGaWM1kh5a7wyRDfaPQ1Kbx97iPngdmCeFK23jw+gNAW3TzlbKFqE8xsLu4PEtr8sdsePOjSIvA==
   dependencies:
     ws "^8.8.1"
 

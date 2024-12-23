@@ -1,6 +1,5 @@
 import { BinanceService } from 'src/binance/binance.service';
 import { Market } from 'src/interfaces/market.interface';
-import { KrakenService } from 'src/kraken/kraken.service';
 import { KucoinService } from 'src/kucoin/kucoin.service';
 
 export abstract class MarketFactory {
@@ -10,7 +9,7 @@ export abstract class MarketFactory {
     aproxStableValue: string,
     redisBalance: string,
     redisFuturesBalance: string,
-    service: KrakenService | BinanceService | KucoinService,
+    service: BinanceService | KucoinService,
   ): Market;
 
   getMarket(
@@ -19,7 +18,7 @@ export abstract class MarketFactory {
     aproxStableValue: string,
     redisBalance: string,
     redisFuturesBalance: string,
-    service: KrakenService | BinanceService | KucoinService,
+    service: BinanceService | KucoinService,
   ): Market {
     const market = this.factoryMethod(
       amountToBuy,

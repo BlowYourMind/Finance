@@ -3,13 +3,13 @@ import { Market } from 'src/interfaces/market.interface';
 import { KucoinService } from 'src/kucoin/kucoin.service';
 import { ActionType, redisInstance } from 'src/redis/redis.service';
 
-export class Kucoin implements Market {
+export class Poloniex implements Market {
   private amountToBuy: string;
   private asset: string;
   private aproxStableValue: string;
   private redisBalance: string;
   private redisFuturesBalance: string;
-  //transfer , check reveived balance
+  
   constructor(
     amountToBuy: string,
     asset: string,
@@ -96,13 +96,14 @@ export class Kucoin implements Market {
   }
   async transfer(highMarket: any): Promise<void> {
     const highMarketNetworks = await highMarket.service.getNetworks(this.asset);
-    console.log(highMarketNetworks);
-    const lowMarketNetworks = await this.service.getNetworks(this.asset, true);
-    console.log(lowMarketNetworks);
+    console.log(highMarketNetworks)
+    const lowMarketNetworks = await this.service.getNetworks(this.asset,true);
+    console.log(lowMarketNetworks)
     const bestNetwork = await this.compareNetworks(
       lowMarketNetworks,
       highMarketNetworks,
     );
+    console.log(bestNetwork)
     const address = await highMarket.service.getDepositAddress(
       this.asset,
       bestNetwork,
@@ -139,7 +140,7 @@ export class Kucoin implements Market {
     );
     for (const highNetwork of highMarketNetworks) {
       const lowNetwork = lowMarketMap.get(highNetwork.network.toLowerCase());
-      console.log(lowNetwork);
+      console.log(lowNetwork)
       if (lowNetwork && lowNetwork.enabled) {
         return highNetwork.network;
       }

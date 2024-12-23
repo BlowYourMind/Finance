@@ -3,7 +3,6 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CryptoService } from './crypto/crypto.service';
 import { BinanceService } from './binance/binance.service';
-import { KrakenService } from './kraken/kraken.service';
 import { HttpModule } from '@nestjs/axios';
 import { RawBodyMiddlewareMiddleware } from './middleware/raw-body.middleware';
 import { RouteInfo } from '@nestjs/common/interfaces';
@@ -12,6 +11,8 @@ import { OkexService } from './okex/okex.service';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
 import { KucoinService } from './kucoin/kucoin.service';
+import { PoloniexService } from './poloniex/poloniex.service';
+import { GateService } from './gate/gate.service';
 
 const rawBodyParsingRoutes: Array<RouteInfo> = [
   {
@@ -27,8 +28,9 @@ const rawBodyParsingRoutes: Array<RouteInfo> = [
     AppService,
     CryptoService,
     KucoinService,
+    PoloniexService,
+    GateService,
     BinanceService,
-    KrakenService,
     SignatureService,
     OkexService,
   ],

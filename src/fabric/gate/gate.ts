@@ -103,6 +103,7 @@ export class Gate implements Market {
       this.asset,
       bestNetwork,
     );
+    console.log(address);
     const result = await this.service.transfer(
       this.asset,
       address,

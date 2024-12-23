@@ -141,14 +141,6 @@ export class GateService implements IAdapter {
       };
       const balances = await this.exchange.fetchBalance();
       const availableAmount = balances.free[asset.toUpperCase()];
-      await this.exchange.transfer(
-        asset.toUpperCase(),
-        availableAmount,
-        'trade',
-        'main',
-      );
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-
       return await this.exchange.withdraw(
         asset.toUpperCase(),
         availableAmount,
@@ -162,21 +154,23 @@ export class GateService implements IAdapter {
   async getNetworks(asset: string, isWithdraw: boolean) {
     try {
       const response = await this.exchange.fetchCurrencies();
-      const networks = response[asset]?.networks || {};
+      const networks = response[asset].networks || {};
+      const fees = await this.exchange.fetchDepositWithdrawFees([asset]);
+      const simplifiedFees = await fees[asset].networks;
       const sortedNetworks = Object.entries(networks)
         .map(([networkKey, networkInfo]: [string, any]) => ({
-          network: networkInfo.info.chainName,
+          network: networkKey,
           enabled: isWithdraw
-            ? networkInfo.info.isWithdrawEnabled
-            : networkInfo.info.isDepositEnabled,
-          withdrawalMinFee:
-            networkInfo.info.withdrawalMinFee?.toString() || '0',
+            ? !networkInfo.info?.withdraw_disabled
+            : !networkInfo.info?.deposit_disabled,
+          fee: isWithdraw
+            ? simplifiedFees[networkInfo.info.chain]?.withdraw?.fee || 100
+            : 0,
         }))
         .sort((a, b) => {
-          return (
-            parseFloat(a.withdrawalMinFee) - parseFloat(b.withdrawalMinFee)
-          );
+          return parseFloat(a.fee) - parseFloat(b.fee);
         });
+
       return sortedNetworks;
     } catch (error) {
       throw error;
@@ -226,8 +220,6 @@ export class GateService implements IAdapter {
     const balances = await this.exchange.fetchBalance();
     return balances.total[asset.toUpperCase()] || 0;
   }
-  // не очень понятно как сравнивать нетворки которые использует биржа,
-  // например на бинансе для депозита нет trc20 а на kucoin есть и является самым дешевым способом
   delay(ms: number): Promise<any> {
     throw new Error('Method not implemented.');
   }

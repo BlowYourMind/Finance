@@ -33,10 +33,10 @@ export class AppService {
       service: this.gateService,
       factory: GateFlow,
     },
-    // kucoin: {
-    //   service: this.kuCoinService,
-    //   factory: KucoinFlow,
-    // },
+    kucoin: {
+      service: this.kuCoinService,
+      factory: KucoinFlow,
+    },
   };
   constructor(
     private readonly binanceService: BinanceService,
@@ -54,7 +54,7 @@ export class AppService {
         amountToBuy: '0.005',
         asset: 'ETH',
         aproxStableValue: '16',
-        marketHigh: MarketType.GATE,
+        marketHigh: MarketType.KUCOIN,
         marketLow: MarketType.GATE,
       });
     }, 500);
@@ -98,9 +98,7 @@ export class AppService {
       redisFuturesBalance,
       this.markets[marketHigh].service,
     );
-    // low.transfer(high);
-    // high.futureBuy();
-    low.futureSell();
+    low.transfer(high);
     // if (Number(redisBalance)) {
     // low.buy();
     // low.transfer(high);
@@ -114,7 +112,6 @@ export class AppService {
   ) {
     await this.markets[market].service[method](asset).then((response: any) => {
       if (response) {
-        console.log(response);
         const asset = Object.keys(response)[0].toLowerCase();
         this.initialiseRedisBalance(
           asset,
